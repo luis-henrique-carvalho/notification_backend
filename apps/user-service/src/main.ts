@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { UserServiceModule } from './user-service.module';
+import { AllRpcExceptionsFilter } from '@app/shared';
 
 async function bootstrap() {
     process.title = 'user-service';
@@ -25,6 +26,8 @@ async function bootstrap() {
             },
         },
     );
+
+    app.useGlobalFilters(new AllRpcExceptionsFilter());
 
     app.enableShutdownHooks();
 

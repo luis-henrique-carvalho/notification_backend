@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { GatewayModule } from './gateway.module';
+import { RpcToHttpInterceptor } from '@app/shared';
 
 async function bootstrap() {
     process.title = 'gateway';
@@ -15,6 +16,8 @@ async function bootstrap() {
 
     // Create a hybrid app: HTTP server + RMQ microservice listener
     const app = await NestFactory.create(GatewayModule);
+
+    app.useGlobalInterceptors(new RpcToHttpInterceptor());
 
     // Connect Gateway as a consumer of gateway_queue so it can receive
     // events emitted by internal services (e.g. notification.created)
