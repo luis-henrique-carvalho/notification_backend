@@ -10,3 +10,4 @@ export * from './enums';
 export * from './dtos';
 export * from './websocket';
 export * from './auth';
+export * from './database';
