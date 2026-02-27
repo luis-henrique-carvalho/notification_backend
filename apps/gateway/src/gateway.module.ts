@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { ConfigModule } from '@nestjs/config';
 
 export const USER_CLIENT = 'USER_CLIENT';
 export const NOTIFICATION_CLIENT = 'NOTIFICATION_CLIENT';
@@ -8,6 +12,8 @@ const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
 
 @Module({
     imports: [
+        ConfigModule.forRoot({ isGlobal: true }),
+        AuthModule,
         ClientsModule.register([
             {
                 name: USER_CLIENT,
@@ -32,6 +38,12 @@ const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
                 },
             },
         ]),
+    ],
+    providers: [
+        {
+            provide: APP_GUARD,
+            useClass: JwtAuthGuard,
+        },
     ],
 })
 export class GatewayModule { }
