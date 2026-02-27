@@ -1,6 +1,6 @@
-import { Controller, Get, Inject, Query } from '@nestjs/common';
+import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role, Roles } from '../auth/roles.decorator';
 
 @ApiTags('users')
@@ -23,5 +23,13 @@ export class UsersController {
         @Query('search') search?: string,
     ) {
         return this.userClient.send('user.findAll', { page, limit, search });
+    }
+
+    @Get(':id')
+    @Roles(Role.USER)
+    @ApiOperation({ summary: 'Find user by ID' })
+    @ApiParam({ name: 'id', required: true, type: String })
+    findById(@Param('id') id: string) {
+        return this.userClient.send('user.findById', id);
     }
 }
