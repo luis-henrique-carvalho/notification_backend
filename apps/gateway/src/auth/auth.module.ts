@@ -39,6 +39,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ],
     controllers: [AuthController],
     providers: [JwtStrategy, JwtAuthGuard, RolesGuard],
-    exports: [JwtAuthGuard, RolesGuard],
+    exports: [JwtAuthGuard, RolesGuard, JwtModule],
 })
 export class AuthModule { }

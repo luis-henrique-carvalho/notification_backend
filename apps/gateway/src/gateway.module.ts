@@ -6,6 +6,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { WsModule } from './ws/ws.module';
 
 export const USER_CLIENT = 'USER_CLIENT';
 export const NOTIFICATION_CLIENT = 'NOTIFICATION_CLIENT';
@@ -18,6 +19,7 @@ const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
         AuthModule,
         UsersModule,
         NotificationsModule,
+        WsModule,
         ClientsModule.register([
             {
                 name: USER_CLIENT,
