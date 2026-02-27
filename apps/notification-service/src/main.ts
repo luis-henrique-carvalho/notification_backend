@@ -1,7 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { NotificationServiceModule } from './notification-service.module';
 import * as amqplib from 'amqplib';
-import { RABBITMQ_EXCHANGE, RABBITMQ_EXCHANGE_TYPE } from '@app/shared';
+import {
+  RABBITMQ_EXCHANGE,
+  RABBITMQ_EXCHANGE_TYPE,
+  setupDeadLetterQueue,
+} from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(NotificationServiceModule);
@@ -14,6 +18,7 @@ async function bootstrap() {
     durable: true,
     autoDelete: false,
   });
+  await setupDeadLetterQueue(channel, 'notification-service');
   await channel.close();
   await connection.close();
 
