@@ -1,22 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserServiceController } from './user-service.controller';
-import { UserServiceService } from './user-service.service';
 
 describe('UserServiceController', () => {
-  let userServiceController: UserServiceController;
+  let controller: UserServiceController;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [UserServiceController],
-      providers: [UserServiceService],
     }).compile();
 
-    userServiceController = app.get<UserServiceController>(UserServiceController);
+    controller = app.get<UserServiceController>(UserServiceController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(userServiceController.getHello()).toBe('Hello World!');
+  describe('healthCheck', () => {
+    it('should return health status', () => {
+      expect(controller.healthCheck()).toBe('user-service ok');
     });
   });
 });

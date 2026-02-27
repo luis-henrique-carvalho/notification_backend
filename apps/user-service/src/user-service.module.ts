@@ -8,5 +8,6 @@ import { userServiceSchema } from './database';
   imports: [DatabaseModule.forFeature({ schema: userServiceSchema })],
   controllers: [UserServiceController],
   providers: [UserServiceService],
+  exports: [UserServiceService],
 })
 export class UserServiceModule {}
