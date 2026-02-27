@@ -1,14 +1,13 @@
 import { Body, Controller, Post, Request, UseGuards, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Public } from './public.decorator';
-import { USER_CLIENT } from '../gateway.module';
 import { RegisterDto, LoginDto } from '@app/shared';
 import { firstValueFrom } from 'rxjs';
 
 @Controller('auth')
 export class AuthController {
     constructor(
-        @Inject(USER_CLIENT) private readonly userClient: ClientProxy,
+        @Inject('USER_CLIENT') private readonly userClient: ClientProxy,
     ) { }
 
     @Public()

@@ -7,7 +7,6 @@ import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { USER_CLIENT } from '../gateway.module';
 
 @Module({
     imports: [
@@ -22,7 +21,7 @@ import { USER_CLIENT } from '../gateway.module';
         }),
         ClientsModule.registerAsync([
             {
-                name: USER_CLIENT,
+                name: 'USER_CLIENT',
                 imports: [ConfigModule],
                 inject: [ConfigService],
                 useFactory: (configService: ConfigService) => ({
