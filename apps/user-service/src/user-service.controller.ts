@@ -19,6 +19,7 @@ export class UserServiceController {
      */
     @MessagePattern(USER_PATTERNS.REGISTER)
     register(@Payload() dto: RegisterDto): Promise<LoginResponseDto> {
+        console.log("register", dto)
         return this.userService.register(dto);
     }
 
