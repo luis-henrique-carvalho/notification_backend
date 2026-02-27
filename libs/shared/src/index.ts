@@ -1,2 +1,31 @@
-// @app/shared barrel file
-// Re-exports will be added as shared modules are created
+// Message & Event patterns
+export { USER_PATTERNS, NOTIFICATION_PATTERNS } from './patterns';
+export { NOTIFICATION_EVENTS } from './events';
+
+// DTOs
+export {
+    RegisterDto,
+    LoginDto,
+    LoginResponseDto,
+    UserResponseDto,
+} from './dto/user.dto';
+export {
+    CreateNotificationDto,
+    NotificationResponseDto,
+    MarkReadDto,
+    AcknowledgeDto,
+    UnreadCountDto,
+    NotificationPriority,
+} from './dto/notification.dto';
+
+// RPC utilities
+export {
+    RpcErrorCode,
+    RpcErrorPayload,
+    rpcNotFound,
+    rpcBadRequest,
+    rpcUnauthorized,
+    rpcConflict,
+} from './rpc/rpc-exception.helpers';
+export { AllRpcExceptionsFilter } from './rpc/rpc-exception.filter';
+export { RpcToHttpInterceptor } from './rpc/rpc-to-http.interceptor';
