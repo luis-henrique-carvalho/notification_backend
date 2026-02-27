@@ -9,6 +9,7 @@ export const USER_PATTERNS = {
     REGISTER: 'user.register',
     LOGIN: 'user.login',
     FIND_BY_ID: 'user.findById',
+    FIND_ALL: 'user.findAll',
 } as const;
 
 export const NOTIFICATION_PATTERNS = {

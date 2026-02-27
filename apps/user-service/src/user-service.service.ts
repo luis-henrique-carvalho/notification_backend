@@ -85,11 +85,15 @@ export class UserServiceService {
      * Finds a user by ID and returns their data without the password.
      */
     async findById(id: string): Promise<UserResponseDto> {
+        console.log("id", id);
         const [user] = await this.db
             .select()
             .from(users)
             .where(eq(users.id, id))
             .limit(1);
+
+
+        console.log("user", user);
 
         if (!user) {
             throw rpcNotFound(`User with id "${id}" not found`);

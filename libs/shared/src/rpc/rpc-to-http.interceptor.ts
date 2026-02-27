@@ -49,6 +49,11 @@ export class RpcToHttpInterceptor implements NestInterceptor {
     }
 
     private mapRpcErrorToHttp(error: unknown): HttpException {
+        // If it's already an HttpException (e.g. from ParseUUIDPipe), just return it
+        if (error instanceof HttpException) {
+            return error;
+        }
+
         // Structured RPC error payload: { code, message }
         if (this.isRpcErrorPayload(error)) {
             const status =

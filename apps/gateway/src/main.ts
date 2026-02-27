@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { GatewayModule } from './gateway.module';
 import { RpcToHttpInterceptor } from '@app/shared';
 
@@ -37,6 +38,17 @@ async function bootstrap() {
 
     // Start RMQ listener and HTTP server concurrently
     await app.startAllMicroservices();
+
+    // Setup Swagger
+    const config = new DocumentBuilder()
+        .setTitle('Notification System API')
+        .setDescription('The realtime notification system API documentation')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+
     await app.listen(httpPort);
 
     logger.log(
