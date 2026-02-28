@@ -18,7 +18,9 @@ import { WsJwtGuard } from './ws-jwt.guard';
         origin: '*',
     },
 })
-export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationsGateway
+    implements OnGatewayConnection, OnGatewayDisconnect
+{
     @WebSocketServer()
     server: Server;
 
@@ -27,7 +29,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     constructor(
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
-    ) { }
+    ) {}
 
     async handleConnection(client: Socket) {
         try {
@@ -36,8 +38,13 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
                 throw new Error('No token provided');
             }
 
-            const secret = this.configService.get<string>('JWT_SECRET', 'super-secret');
-            const payload = await this.jwtService.verifyAsync(token, { secret });
+            const secret = this.configService.get<string>(
+                'JWT_SECRET',
+                'super-secret',
+            );
+            const payload = await this.jwtService.verifyAsync(token, {
+                secret,
+            });
 
             client.data.user = payload;
 
@@ -46,7 +53,9 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
             this.logger.log(`Client connected: ${client.id} (User: ${userId})`);
         } catch (error: any) {
-            this.logger.error(`Connection failed: ${client.id} - ${error.message}`);
+            this.logger.error(
+                `Connection failed: ${client.id} - ${error.message}`,
+            );
             client.disconnect(true);
         }
     }
@@ -62,7 +71,10 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
         @ConnectedSocket() client: Socket,
     ) {
         const userId = client.data.user.sub || client.data.user.id;
-        this.logger.log(`Notification delivered ack from user ${userId}:`, data);
+        this.logger.log(
+            `Notification delivered ack from user ${userId}:`,
+            data,
+        );
     }
 
     private extractToken(client: Socket): string | null {
@@ -80,6 +92,8 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     }
 
     emitUnreadCount(userId: string | number, count: number) {
-        this.server.to(`user:${userId}`).emit('notification:unread_count', { count });
+        this.server
+            .to(`user:${userId}`)
+            .emit('notification:unread_count', { count });
     }
 }

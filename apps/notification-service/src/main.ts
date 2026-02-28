@@ -27,18 +27,22 @@ async function bootstrap() {
         },
     );
 
-    app.useGlobalPipes(new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-    }));
+    app.useGlobalPipes(
+        new ValidationPipe({
+            whitelist: true,
+            forbidNonWhitelisted: true,
+            transform: true,
+        }),
+    );
     app.useGlobalFilters(new AllRpcExceptionsFilter());
 
     app.enableShutdownHooks();
 
     await app.listen();
 
-    logger.log(`Notification Service RMQ listening on queue "${queue}" via ${rmqUrl}`);
+    logger.log(
+        `Notification Service RMQ listening on queue "${queue}" via ${rmqUrl}`,
+    );
 }
 
 bootstrap();

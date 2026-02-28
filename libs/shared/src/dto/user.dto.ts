@@ -10,11 +10,17 @@ export class RegisterDto {
     @IsNotEmpty()
     name: string;
 
-    @ApiProperty({ description: 'The email address of the user', example: 'user@example.com' })
+    @ApiProperty({
+        description: 'The email address of the user',
+        example: 'user@example.com',
+    })
     @IsEmail()
     email: string;
 
-    @ApiProperty({ description: 'The password of the user, min length 6', example: 'strongpassx123' })
+    @ApiProperty({
+        description: 'The password of the user, min length 6',
+        example: 'strongpassx123',
+    })
     @IsString()
     @MinLength(6)
     password: string;
@@ -24,7 +30,10 @@ export class RegisterDto {
  * DTO for user login via user.login message pattern.
  */
 export class LoginDto {
-    @ApiProperty({ description: 'The email address of the user', example: 'user@example.com' })
+    @ApiProperty({
+        description: 'The email address of the user',
+        example: 'user@example.com',
+    })
     @IsEmail()
     email: string;
 

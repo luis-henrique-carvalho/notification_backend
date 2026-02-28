@@ -10,7 +10,9 @@ import {
 
 @Controller()
 export class NotificationServiceController {
-    constructor(private readonly notificationService: NotificationServiceService) { }
+    constructor(
+        private readonly notificationService: NotificationServiceService,
+    ) {}
 
     @MessagePattern(NOTIFICATION_PATTERNS.CREATE)
     create(@Payload() data: CreateNotificationDto) {
@@ -18,8 +20,14 @@ export class NotificationServiceController {
     }
 
     @MessagePattern(NOTIFICATION_PATTERNS.FIND_ALL)
-    findAll(@Payload() data: { userId: string; page?: number; limit?: number }) {
-        return this.notificationService.findAll(data.userId, data.page, data.limit);
+    findAll(
+        @Payload() data: { userId: string; page?: number; limit?: number },
+    ) {
+        return this.notificationService.findAll(
+            data.userId,
+            data.page,
+            data.limit,
+        );
     }
 
     @MessagePattern(NOTIFICATION_PATTERNS.MARK_READ)

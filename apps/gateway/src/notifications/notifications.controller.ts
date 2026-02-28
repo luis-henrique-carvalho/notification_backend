@@ -1,24 +1,47 @@
-import { Body, Controller, Get, Inject, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Inject,
+    Param,
+    Patch,
+    Post,
+    Query,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+    ApiBearerAuth,
+    ApiOperation,
+    ApiQuery,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
 import { NOTIFICATION_PATTERNS, CreateNotificationDto } from '@app/shared';
 import { Role, Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { User } from 'apps/user-service/src/database/schema';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
 @Controller('notifications')
 export class NotificationsController {
     constructor(
-        @Inject('NOTIFICATION_CLIENT') private readonly notificationClient: ClientProxy,
+        @Inject('NOTIFICATION_CLIENT')
+        private readonly notificationClient: ClientProxy,
     ) { }
 
     @Post()
     @Roles(Role.ADMIN)
     @ApiOperation({ summary: 'Create a new notification (Admin only)' })
-    @ApiResponse({ status: 201, description: 'Notification successfully created.' })
-    @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
-    create(@Body() dto: CreateNotificationDto, @CurrentUser() user: any) {
+    @ApiResponse({
+        status: 201,
+        description: 'Notification successfully created.',
+    })
+    @ApiResponse({
+        status: 403,
+        description: 'Forbidden. Admin role required.',
+    })
+    create(@Body() dto: CreateNotificationDto, @CurrentUser() user: User) {
         return this.notificationClient.send(NOTIFICATION_PATTERNS.CREATE, {
             ...dto,
             senderId: user.id,
@@ -27,11 +50,14 @@ export class NotificationsController {
 
     @Get()
     @ApiOperation({ summary: 'Get current user notifications' })
-    @ApiResponse({ status: 200, description: 'List of notifications returned successfully.' })
+    @ApiResponse({
+        status: 200,
+        description: 'List of notifications returned successfully.',
+    })
     @ApiQuery({ name: 'page', required: false, type: Number })
     @ApiQuery({ name: 'limit', required: false, type: Number })
     findAll(
-        @CurrentUser() user: any,
+        @CurrentUser() user: User,
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 20,
     ) {
@@ -46,7 +72,7 @@ export class NotificationsController {
     @ApiOperation({ summary: 'Mark a notification as read' })
     @ApiResponse({ status: 200, description: 'Notification marked as read.' })
     @ApiResponse({ status: 404, description: 'Notification not found.' })
-    markRead(@Param('id') id: string, @CurrentUser() user: any) {
+    markRead(@Param('id') id: string, @CurrentUser() user: User) {
         return this.notificationClient.send(NOTIFICATION_PATTERNS.MARK_READ, {
             notificationId: id,
             userId: user.id,
@@ -55,18 +81,24 @@ export class NotificationsController {
 
     @Patch('read-all')
     @ApiOperation({ summary: 'Mark all notifications as read' })
-    @ApiResponse({ status: 200, description: 'All notifications marked as read.' })
-    markAllRead(@CurrentUser() user: any) {
-        return this.notificationClient.send(NOTIFICATION_PATTERNS.MARK_ALL_READ, {
-            userId: user.id,
-        });
+    @ApiResponse({
+        status: 200,
+        description: 'All notifications marked as read.',
+    })
+    markAllRead(@CurrentUser() user: User) {
+        return this.notificationClient.send(
+            NOTIFICATION_PATTERNS.MARK_ALL_READ,
+            {
+                userId: user.id,
+            },
+        );
     }
 
     @Post(':id/acknowledge')
     @ApiOperation({ summary: 'Acknowledge a critical notification' })
     @ApiResponse({ status: 200, description: 'Notification acknowledged.' })
     @ApiResponse({ status: 404, description: 'Notification not found.' })
-    acknowledge(@Param('id') id: string, @CurrentUser() user: any) {
+    acknowledge(@Param('id') id: string, @CurrentUser() user: User) {
         return this.notificationClient.send(NOTIFICATION_PATTERNS.ACKNOWLEDGE, {
             notificationId: id,
             userId: user.id,
@@ -75,10 +107,16 @@ export class NotificationsController {
 
     @Get('unread-count')
     @ApiOperation({ summary: 'Get unread notification count' })
-    @ApiResponse({ status: 200, description: 'Unread count returned successfully.' })
-    unreadCount(@CurrentUser() user: any) {
-        return this.notificationClient.send(NOTIFICATION_PATTERNS.UNREAD_COUNT, {
-            userId: user.id,
-        });
+    @ApiResponse({
+        status: 200,
+        description: 'Unread count returned successfully.',
+    })
+    unreadCount(@CurrentUser() user: User) {
+        return this.notificationClient.send(
+            NOTIFICATION_PATTERNS.UNREAD_COUNT,
+            {
+                userId: user.id,
+            },
+        );
     }
 }

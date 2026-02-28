@@ -52,4 +52,4 @@ const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
         },
     ],
 })
-export class GatewayModule { }
+export class GatewayModule {}

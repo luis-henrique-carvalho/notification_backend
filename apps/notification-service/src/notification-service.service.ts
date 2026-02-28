@@ -19,26 +19,32 @@ export class NotificationServiceService {
     constructor(
         @Inject(DRIZZLE) private readonly db: DrizzleDB,
         @Inject('GATEWAY_SERVICE') private readonly gatewayClient: ClientProxy,
-    ) { }
+    ) {}
 
     async create(dto: CreateNotificationDto): Promise<NotificationResponseDto> {
         this.logger.log(`Creating notification for user ${dto.userId}`);
 
         // Persist
-        const [notification] = await this.db.insert(notifications).values({
-            title: dto.title,
-            body: dto.body,
-            priority: dto.priority,
-            senderId: dto.senderId,
-            broadcast: false, // assuming explicit users for now
-            // metadata/type not in schema but ignoring for now unless we alter schema
-        }).returning();
+        const [notification] = await this.db
+            .insert(notifications)
+            .values({
+                title: dto.title,
+                body: dto.body,
+                priority: dto.priority,
+                senderId: dto.senderId,
+                broadcast: false, // assuming explicit users for now
+                // metadata/type not in schema but ignoring for now unless we alter schema
+            })
+            .returning();
 
-        const [recipient] = await this.db.insert(notificationRecipients).values({
-            notificationId: notification.id,
-            userId: dto.userId,
-            status: 'created',
-        }).returning();
+        const [recipient] = await this.db
+            .insert(notificationRecipients)
+            .values({
+                notificationId: notification.id,
+                userId: dto.userId,
+                status: 'created',
+            })
+            .returning();
 
         const response: NotificationResponseDto = {
             id: notification.id,
@@ -71,7 +77,10 @@ export class NotificationServiceService {
                 recipient: notificationRecipients,
             })
             .from(notificationRecipients)
-            .innerJoin(notifications, eq(notificationRecipients.notificationId, notifications.id))
+            .innerJoin(
+                notifications,
+                eq(notificationRecipients.notificationId, notifications.id),
+            )
             .where(eq(notificationRecipients.userId, userId))
             .orderBy(desc(notifications.createdAt))
             .limit(limit)
@@ -83,20 +92,24 @@ export class NotificationServiceService {
             .from(notificationRecipients)
             .where(eq(notificationRecipients.userId, userId));
 
-        const data: NotificationResponseDto[] = results.map(({ notification, recipient }) => ({
-            id: notification.id,
-            title: notification.title,
-            body: notification.body,
-            priority: notification.priority as any,
-            type: null,
-            metadata: null,
-            read: recipient.status === 'read' || recipient.status === 'acknowledged',
-            readAt: recipient.readAt,
-            acknowledged: recipient.status === 'acknowledged',
-            acknowledgedAt: recipient.acknowledgedAt,
-            createdAt: notification.createdAt,
-            userId: recipient.userId,
-        }));
+        const data: NotificationResponseDto[] = results.map(
+            ({ notification, recipient }) => ({
+                id: notification.id,
+                title: notification.title,
+                body: notification.body,
+                priority: notification.priority as any,
+                type: null,
+                metadata: null,
+                read:
+                    recipient.status === 'read' ||
+                    recipient.status === 'acknowledged',
+                readAt: recipient.readAt,
+                acknowledged: recipient.status === 'acknowledged',
+                acknowledgedAt: recipient.acknowledgedAt,
+                createdAt: notification.createdAt,
+                userId: recipient.userId,
+            }),
+        );
 
         return {
             data,
@@ -118,9 +131,15 @@ export class NotificationServiceService {
             .where(
                 and(
                     eq(notificationRecipients.userId, userId),
-                    inArray(notificationRecipients.notificationId, dto.notificationIds),
-                    inArray(notificationRecipients.status, ['delivered', 'created'])
-                )
+                    inArray(
+                        notificationRecipients.notificationId,
+                        dto.notificationIds,
+                    ),
+                    inArray(notificationRecipients.status, [
+                        'delivered',
+                        'created',
+                    ]),
+                ),
             );
 
         return { success: true };
@@ -135,24 +154,36 @@ export class NotificationServiceService {
             .where(
                 and(
                     eq(notificationRecipients.userId, userId),
-                    inArray(notificationRecipients.status, ['created', 'delivered'])
-                )
+                    inArray(notificationRecipients.status, [
+                        'created',
+                        'delivered',
+                    ]),
+                ),
             );
 
         return { success: true };
     }
 
     async acknowledge(dto: AcknowledgeDto, userId: string) {
-        this.logger.log(`Acknowledging notification ${dto.notificationId} for user ${userId}`);
+        this.logger.log(
+            `Acknowledging notification ${dto.notificationId} for user ${userId}`,
+        );
 
         const result = await this.db
             .update(notificationRecipients)
-            .set({ status: 'acknowledged', acknowledgedAt: new Date(), readAt: new Date() })
+            .set({
+                status: 'acknowledged',
+                acknowledgedAt: new Date(),
+                readAt: new Date(),
+            })
             .where(
                 and(
                     eq(notificationRecipients.userId, userId),
-                    eq(notificationRecipients.notificationId, dto.notificationId)
-                )
+                    eq(
+                        notificationRecipients.notificationId,
+                        dto.notificationId,
+                    ),
+                ),
             )
             .returning();
 
@@ -170,8 +201,11 @@ export class NotificationServiceService {
             .where(
                 and(
                     eq(notificationRecipients.userId, userId),
-                    inArray(notificationRecipients.status, ['created', 'delivered'])
-                )
+                    inArray(notificationRecipients.status, [
+                        'created',
+                        'delivered',
+                    ]),
+                ),
             );
         return { count: Number(count), userId };
     }

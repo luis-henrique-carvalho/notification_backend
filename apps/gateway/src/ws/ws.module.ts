@@ -10,4 +10,4 @@ import { ConfigModule } from '@nestjs/config';
     controllers: [NotificationEventsController],
     providers: [NotificationsGateway, WsJwtGuard],
 })
-export class WsModule { }
+export class WsModule {}

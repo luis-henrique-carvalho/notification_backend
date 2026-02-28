@@ -21,7 +21,7 @@ export class AllRpcExceptionsFilter extends BaseRpcExceptionFilter {
     catch(exception: unknown, host: ArgumentsHost): Observable<never> {
         const errorPayload = this.normalizeException(exception);
         this.logger.error(
-            `RPC Exception: [${errorPayload.code}] ${errorPayload.message}`,
+            `RPC Exception: [${errorPayload.code}] ${errorPayload.message} - host ${host}`,
             exception instanceof Error ? exception.stack : undefined,
         );
         return throwError(() => errorPayload);
@@ -50,11 +50,19 @@ export class AllRpcExceptionsFilter extends BaseRpcExceptionFilter {
         // NestJS HttpExceptions (e.g. from ValidationPipe)
         if (exception instanceof HttpException) {
             const response = exception.getResponse();
-            const message = typeof response === 'object' && response !== null && 'message' in response
-                ? (Array.isArray(response['message']) ? response['message'].join(', ') : response['message'] as string)
-                : exception.message;
+            const message =
+                typeof response === 'object' &&
+                response !== null &&
+                'message' in response
+                    ? Array.isArray(response['message'])
+                        ? response['message'].join(', ')
+                        : (response['message'] as string)
+                    : exception.message;
 
-            const code = exception.getStatus() === 400 ? RpcErrorCode.BAD_REQUEST : RpcErrorCode.INTERNAL;
+            const code =
+                exception.getStatus() === 400
+                    ? RpcErrorCode.BAD_REQUEST
+                    : RpcErrorCode.INTERNAL;
             return { code, message };
         }
 

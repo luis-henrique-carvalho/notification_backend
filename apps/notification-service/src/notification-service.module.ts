@@ -24,4 +24,4 @@ import { NotificationServiceService } from './notification-service.service';
     controllers: [NotificationServiceController, NotificationEventsController],
     providers: [DrizzleProvider, NotificationServiceService],
 })
-export class NotificationServiceModule { }
+export class NotificationServiceModule {}

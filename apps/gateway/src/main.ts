@@ -18,11 +18,13 @@ async function bootstrap() {
     // Create a hybrid app: HTTP server + RMQ microservice listener
     const app = await NestFactory.create(GatewayModule);
 
-    app.useGlobalPipes(new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-    }));
+    app.useGlobalPipes(
+        new ValidationPipe({
+            whitelist: true,
+            forbidNonWhitelisted: true,
+            transform: true,
+        }),
+    );
     app.useGlobalInterceptors(new RpcToHttpInterceptor());
 
     // Connect Gateway as a consumer of gateway_queue so it can receive
@@ -56,9 +58,7 @@ async function bootstrap() {
 
     await app.listen(httpPort);
 
-    logger.log(
-        `Gateway HTTP listening on port ${httpPort}`,
-    );
+    logger.log(`Gateway HTTP listening on port ${httpPort}`);
     logger.log(
         `Gateway RMQ consumer listening on queue "${gatewayQueue}" via ${rmqUrl}`,
     );

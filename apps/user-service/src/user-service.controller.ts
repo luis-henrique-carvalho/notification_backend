@@ -7,11 +7,11 @@ import {
     USER_PATTERNS,
     UserResponseDto,
 } from '@app/shared';
-import { UserServiceService } from './user-service.service'
+import { UserServiceService } from './user-service.service';
 
 @Controller()
 export class UserServiceController {
-    constructor(private readonly userService: UserServiceService) { }
+    constructor(private readonly userService: UserServiceService) {}
 
     /**
      * Handles user.register messages from the Gateway.
@@ -19,7 +19,7 @@ export class UserServiceController {
      */
     @MessagePattern(USER_PATTERNS.REGISTER)
     register(@Payload() dto: RegisterDto): Promise<LoginResponseDto> {
-        console.log("register", dto)
+        console.log('register', dto);
         return this.userService.register(dto);
     }
 

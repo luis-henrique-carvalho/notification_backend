@@ -4,7 +4,13 @@ import { RpcException } from '@nestjs/microservices';
 import { NotificationServiceService } from './notification-service.service';
 import { DRIZZLE } from './database/drizzle.provider';
 import { RpcErrorCode } from '@app/shared';
-import { CreateNotificationDto, MarkReadDto, AcknowledgeDto, NOTIFICATION_EVENTS, NotificationPriority } from '@app/shared';
+import {
+    CreateNotificationDto,
+    MarkReadDto,
+    AcknowledgeDto,
+    NOTIFICATION_EVENTS,
+    NotificationPriority,
+} from '@app/shared';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -74,7 +80,9 @@ describe('NotificationServiceService', () => {
             ],
         }).compile();
 
-        service = module.get<NotificationServiceService>(NotificationServiceService);
+        service = module.get<NotificationServiceService>(
+            NotificationServiceService,
+        );
         gatewayClient = module.get<ClientProxy>('GATEWAY_SERVICE');
     });
 
@@ -91,7 +99,11 @@ describe('NotificationServiceService', () => {
         };
 
         it('should create an individual notification, a recipient, and emit the event', async () => {
-            const newNotif = makeNotification({ title: 'Welcome', body: 'Hello World', priority: NotificationPriority.MEDIUM });
+            const newNotif = makeNotification({
+                title: 'Welcome',
+                body: 'Hello World',
+                priority: NotificationPriority.MEDIUM,
+            });
             const newRecip = makeRecipient({ userId: 'user-123' });
 
             mockDb.returning
@@ -103,21 +115,33 @@ describe('NotificationServiceService', () => {
             expect(result.id).toBe(newNotif.id);
             expect(result.userId).toBe('user-123');
             expect(result.read).toBe(false);
-            expect(gatewayClient.emit).toHaveBeenCalledWith(NOTIFICATION_EVENTS.CREATED, result);
+            expect(gatewayClient.emit).toHaveBeenCalledWith(
+                NOTIFICATION_EVENTS.CREATED,
+                result,
+            );
         });
 
         it('should structure event data properly including correct priority', async () => {
-            const dto: CreateNotificationDto = { ...createDto, priority: NotificationPriority.HIGH };
-            const newNotif = makeNotification({ priority: NotificationPriority.HIGH });
+            const dto: CreateNotificationDto = {
+                ...createDto,
+                priority: NotificationPriority.HIGH,
+            };
+            const newNotif = makeNotification({
+                priority: NotificationPriority.HIGH,
+            });
             const newRecip = makeRecipient();
 
-            mockDb.returning.mockResolvedValueOnce([newNotif]).mockResolvedValueOnce([newRecip]);
+            mockDb.returning
+                .mockResolvedValueOnce([newNotif])
+                .mockResolvedValueOnce([newRecip]);
             const result = await service.create(dto);
 
             expect(result.priority).toBe(NotificationPriority.HIGH);
             expect(gatewayClient.emit).toHaveBeenCalledWith(
                 NOTIFICATION_EVENTS.CREATED,
-                expect.objectContaining({ priority: NotificationPriority.HIGH })
+                expect.objectContaining({
+                    priority: NotificationPriority.HIGH,
+                }),
             );
         });
     });
@@ -129,10 +153,15 @@ describe('NotificationServiceService', () => {
     describe('findAll()', () => {
         it('should return paginated notifications for a user', async () => {
             const mockRows = [
-                { notification: makeNotification(), recipient: makeRecipient() },
+                {
+                    notification: makeNotification(),
+                    recipient: makeRecipient(),
+                },
             ];
             mockDb.offset.mockResolvedValueOnce(mockRows); // first query returns results
-            mockDb.where.mockReturnValueOnce(mockDb).mockResolvedValueOnce([{ count: 1 }]); // second query returns count
+            mockDb.where
+                .mockReturnValueOnce(mockDb)
+                .mockResolvedValueOnce([{ count: 1 }]); // second query returns count
 
             const result = await service.findAll('user-123', 1, 10);
 
@@ -160,14 +189,20 @@ describe('NotificationServiceService', () => {
             const result = await service.markRead(dto, 'user-123');
             expect(result.success).toBe(true);
 
-            expect(mockDb.set).toHaveBeenCalledWith(expect.objectContaining({ status: 'read' }));
+            expect(mockDb.set).toHaveBeenCalledWith(
+                expect.objectContaining({ status: 'read' }),
+            );
             // We just ensure it doesn't throw and it returns success.
         });
 
         it('should be idempotent (not throw on repeated calls)', async () => {
             const dto: MarkReadDto = { notificationIds: ['notif-1'] };
-            await expect(service.markRead(dto, 'user-123')).resolves.toEqual({ success: true });
-            await expect(service.markRead(dto, 'user-123')).resolves.toEqual({ success: true });
+            await expect(service.markRead(dto, 'user-123')).resolves.toEqual({
+                success: true,
+            });
+            await expect(service.markRead(dto, 'user-123')).resolves.toEqual({
+                success: true,
+            });
         });
     });
 
@@ -179,11 +214,15 @@ describe('NotificationServiceService', () => {
         it('should successfully acknowledge a notification and return success', async () => {
             const dto: AcknowledgeDto = { notificationId: 'notif-1' };
             // Since `returning()` is called in the service for acknowledge, we must mock it returning rows
-            mockDb.returning.mockResolvedValueOnce([makeRecipient({ status: 'acknowledged' })]);
+            mockDb.returning.mockResolvedValueOnce([
+                makeRecipient({ status: 'acknowledged' }),
+            ]);
 
             const result = await service.acknowledge(dto, 'user-123');
             expect(result.success).toBe(true);
-            expect(mockDb.set).toHaveBeenCalledWith(expect.objectContaining({ status: 'acknowledged' }));
+            expect(mockDb.set).toHaveBeenCalledWith(
+                expect.objectContaining({ status: 'acknowledged' }),
+            );
         });
 
         it('should throw NOT_FOUND if the notification is not found or already acknowledged (0 rows returned)', async () => {
@@ -191,10 +230,12 @@ describe('NotificationServiceService', () => {
             // Simulate that 0 records were updated (because where condition didn't match)
             mockDb.returning.mockResolvedValueOnce([]);
 
-            await expect(service.acknowledge(dto, 'user-123')).rejects.toMatchObject({
+            await expect(
+                service.acknowledge(dto, 'user-123'),
+            ).rejects.toMatchObject({
                 error: expect.objectContaining({
-                    message: expect.stringContaining('already acknowledged')
-                })
+                    message: expect.stringContaining('already acknowledged'),
+                }),
             });
         });
     });

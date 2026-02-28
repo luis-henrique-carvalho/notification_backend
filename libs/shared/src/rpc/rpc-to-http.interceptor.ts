@@ -39,7 +39,10 @@ const RPC_TO_HTTP_STATUS: Record<string, HttpStatus> = {
 export class RpcToHttpInterceptor implements NestInterceptor {
     private readonly logger = new Logger(RpcToHttpInterceptor.name);
 
-    intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    intercept(
+        context: ExecutionContext,
+        next: CallHandler,
+    ): Observable<unknown> {
         return next.handle().pipe(
             catchError((error: unknown) => {
                 const httpException = this.mapRpcErrorToHttp(error);
@@ -57,9 +60,14 @@ export class RpcToHttpInterceptor implements NestInterceptor {
         // Structured RPC error payload: { code, message }
         if (this.isRpcErrorPayload(error)) {
             const status =
-                RPC_TO_HTTP_STATUS[error.code] || HttpStatus.INTERNAL_SERVER_ERROR;
+                RPC_TO_HTTP_STATUS[error.code] ||
+                HttpStatus.INTERNAL_SERVER_ERROR;
             return new HttpException(
-                { statusCode: status, message: error.message, error: error.code },
+                {
+                    statusCode: status,
+                    message: error.message,
+                    error: error.code,
+                },
                 status,
             );
         }
@@ -67,7 +75,10 @@ export class RpcToHttpInterceptor implements NestInterceptor {
         // String error
         if (typeof error === 'string') {
             return new HttpException(
-                { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error },
+                {
+                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: error,
+                },
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }

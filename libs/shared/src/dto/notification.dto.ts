@@ -21,37 +21,50 @@ export enum NotificationPriority {
  * DTO for creating a notification via notification.create message pattern.
  */
 export class CreateNotificationDto {
-    @ApiProperty({ description: 'The title of the notification', example: 'System Update' })
+    @ApiProperty({
+        description: 'The title of the notification',
+        example: 'System Update',
+    })
     @IsString()
     @IsNotEmpty()
     title: string;
 
-    @ApiProperty({ description: 'The body content of the notification', example: 'The system will undergo maintenance.' })
+    @ApiProperty({
+        description: 'The body content of the notification',
+        example: 'The system will undergo maintenance.',
+    })
     @IsString()
     @IsNotEmpty()
     body: string;
 
-    @ApiPropertyOptional({ enum: NotificationPriority, default: NotificationPriority.MEDIUM, description: 'Priority level of the notification' })
+    @ApiPropertyOptional({
+        enum: NotificationPriority,
+        default: NotificationPriority.MEDIUM,
+        description: 'Priority level of the notification',
+    })
     @IsEnum(NotificationPriority)
     @IsOptional()
     priority?: NotificationPriority = NotificationPriority.MEDIUM;
 
     @ApiProperty({
         description: 'The ID of the user the notification belongs to',
-        example: 'd83c4801-4470-4d8e-9c71-f9c18d022b72'
+        example: 'd83c4801-4470-4d8e-9c71-f9c18d022b72',
     })
     @IsUUID()
     userId: string;
 
     @ApiPropertyOptional({
-        description: 'The ID of the user who sent the notification (system if null)',
-        example: 'd83c4801-4470-4d8e-9c71-f9c18d022b72'
+        description:
+            'The ID of the user who sent the notification (system if null)',
+        example: 'd83c4801-4470-4d8e-9c71-f9c18d022b72',
     })
     @IsUUID()
     @IsOptional()
     senderId?: string;
 
-    @ApiPropertyOptional({ description: 'Optional type categorization for the notification' })
+    @ApiPropertyOptional({
+        description: 'Optional type categorization for the notification',
+    })
     @IsString()
     @IsOptional()
     type?: string;
@@ -74,10 +87,16 @@ export class NotificationResponseDto {
     @ApiProperty({ description: 'The body content of the notification' })
     body: string;
 
-    @ApiProperty({ enum: NotificationPriority, description: 'Priority level of the notification' })
+    @ApiProperty({
+        enum: NotificationPriority,
+        description: 'Priority level of the notification',
+    })
     priority: NotificationPriority;
 
-    @ApiProperty({ description: 'Type categorization for the notification', nullable: true })
+    @ApiProperty({
+        description: 'Type categorization for the notification',
+        nullable: true,
+    })
     type: string | null;
 
     @ApiProperty({ description: 'Additional metadata payload', nullable: true })
@@ -86,19 +105,29 @@ export class NotificationResponseDto {
     @ApiProperty({ description: 'Whether the notification has been read' })
     read: boolean;
 
-    @ApiProperty({ description: 'Date when the notification was read', nullable: true })
+    @ApiProperty({
+        description: 'Date when the notification was read',
+        nullable: true,
+    })
     readAt: Date | null;
 
-    @ApiProperty({ description: 'Whether the notification has been acknowledged' })
+    @ApiProperty({
+        description: 'Whether the notification has been acknowledged',
+    })
     acknowledged: boolean;
 
-    @ApiProperty({ description: 'Date when the notification was acknowledged', nullable: true })
+    @ApiProperty({
+        description: 'Date when the notification was acknowledged',
+        nullable: true,
+    })
     acknowledgedAt: Date | null;
 
     @ApiProperty({ description: 'Date when the notification was created' })
     createdAt: Date;
 
-    @ApiProperty({ description: 'The ID of the user the notification belongs to' })
+    @ApiProperty({
+        description: 'The ID of the user the notification belongs to',
+    })
     userId: string;
 }
 
@@ -106,7 +135,10 @@ export class NotificationResponseDto {
  * DTO for marking notifications as read.
  */
 export class MarkReadDto {
-    @ApiProperty({ description: 'Array of notification IDs to mark as read', type: [String] })
+    @ApiProperty({
+        description: 'Array of notification IDs to mark as read',
+        type: [String],
+    })
     @IsArray()
     @IsUUID('4', { each: true })
     notificationIds: string[];

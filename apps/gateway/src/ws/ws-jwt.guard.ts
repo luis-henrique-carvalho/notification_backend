@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+    CanActivate,
+    ExecutionContext,
+    Injectable,
+    Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
@@ -11,7 +16,7 @@ export class WsJwtGuard implements CanActivate {
     constructor(
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
-    ) { }
+    ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         try {
@@ -21,8 +26,13 @@ export class WsJwtGuard implements CanActivate {
                 throw new WsException('Unauthorized');
             }
 
-            const secret = this.configService.get<string>('JWT_SECRET', 'super-secret');
-            const payload = await this.jwtService.verifyAsync(token, { secret });
+            const secret = this.configService.get<string>(
+                'JWT_SECRET',
+                'super-secret',
+            );
+            const payload = await this.jwtService.verifyAsync(token, {
+                secret,
+            });
 
             client.data.user = payload;
             return true;

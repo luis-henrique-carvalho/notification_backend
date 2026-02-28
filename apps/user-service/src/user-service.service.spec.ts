@@ -92,7 +92,9 @@ describe('UserServiceService', () => {
             expect(result.user.id).toBe(newUser.id);
             expect(result.user.email).toBe(newUser.email);
             // Password must NOT be exposed
-            expect((result.user as unknown as Record<string, unknown>)['password']).toBeUndefined();
+            expect(
+                (result.user as unknown as Record<string, unknown>)['password'],
+            ).toBeUndefined();
         });
 
         it('should hash the password before storing it', async () => {
@@ -150,7 +152,9 @@ describe('UserServiceService', () => {
 
             expect(result.accessToken).toBe('mock.jwt.token');
             expect(result.user.email).toBe(existingUser.email);
-            expect((result.user as unknown as Record<string, unknown>)['password']).toBeUndefined();
+            expect(
+                (result.user as unknown as Record<string, unknown>)['password'],
+            ).toBeUndefined();
         });
 
         it('should throw UNAUTHORIZED when email is not found', async () => {
@@ -180,11 +184,17 @@ describe('UserServiceService', () => {
         it('should NOT reveal whether the email or the password was wrong', async () => {
             // Both email-not-found and wrong-password must throw identical messages
             mockDb.limit.mockResolvedValueOnce([]);
-            const errorNoEmail = await service.login(loginDto).catch((e: RpcException) => e);
+            const errorNoEmail = await service
+                .login(loginDto)
+                .catch((e: RpcException) => e);
 
             const hashedPassword = await bcrypt.hash('wrongPassword', 10);
-            mockDb.limit.mockResolvedValueOnce([makeUser({ password: hashedPassword })]);
-            const errorBadPw = await service.login(loginDto).catch((e: RpcException) => e);
+            mockDb.limit.mockResolvedValueOnce([
+                makeUser({ password: hashedPassword }),
+            ]);
+            const errorBadPw = await service
+                .login(loginDto)
+                .catch((e: RpcException) => e);
 
             // Both should contain the same generic "Invalid credentials" message
             expect((errorNoEmail as RpcException).getError()).toEqual(
@@ -208,13 +218,17 @@ describe('UserServiceService', () => {
             expect(result.name).toBe(existingUser.name);
             expect(result.email).toBe(existingUser.email);
             expect(result.role).toBe(existingUser.role);
-            expect((result as unknown as Record<string, unknown>)['password']).toBeUndefined();
+            expect(
+                (result as unknown as Record<string, unknown>)['password'],
+            ).toBeUndefined();
         });
 
         it('should throw NOT_FOUND RpcException for a non-existent user id', async () => {
             mockDb.limit.mockResolvedValueOnce([]); // no user returned
 
-            await expect(service.findById('non-existent-uuid')).rejects.toMatchObject({
+            await expect(
+                service.findById('non-existent-uuid'),
+            ).rejects.toMatchObject({
                 error: {
                     code: RpcErrorCode.NOT_FOUND,
                     message: expect.stringContaining('non-existent-uuid'),
@@ -226,7 +240,9 @@ describe('UserServiceService', () => {
             const targetId = 'some-specific-uuid-456';
             mockDb.limit.mockResolvedValueOnce([]);
 
-            const error = await service.findById(targetId).catch((e: RpcException) => e);
+            const error = await service
+                .findById(targetId)
+                .catch((e: RpcException) => e);
 
             expect((error as RpcException).getError()).toMatchObject({
                 message: expect.stringContaining(targetId),
