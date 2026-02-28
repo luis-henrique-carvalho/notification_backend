@@ -12,6 +12,7 @@ export {
 export {
   CreateNotificationDto,
   NotificationResponseDto,
+  SendNotificationResponseDto,
   MarkReadDto,
   AcknowledgeDto,
   UnreadCountDto,

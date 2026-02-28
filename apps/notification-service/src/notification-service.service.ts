@@ -6,6 +6,7 @@ import { notifications, notificationRecipients } from './database/schema';
 import {
   CreateNotificationDto,
   NotificationResponseDto,
+  SendNotificationResponseDto,
   MarkReadDto,
   AcknowledgeDto,
   NOTIFICATION_EVENTS,
@@ -22,50 +23,68 @@ export class NotificationServiceService {
     @Inject('GATEWAY_SERVICE') private readonly gatewayClient: ClientProxy,
   ) {}
 
-  async create(dto: CreateNotificationDto): Promise<NotificationResponseDto> {
-    this.logger.log(`Creating notification for user ${dto.userId}`);
+  async create(
+    dto: CreateNotificationDto,
+  ): Promise<SendNotificationResponseDto> {
+    const { userIds, broadcast = false } = dto;
+    this.logger.log(
+      `Creating notification for ${broadcast ? 'broadcast' : `${userIds.length} user(s)`}`,
+    );
 
-    // Persist
-    const [notification] = await this.db
-      .insert(notifications)
-      .values({
-        title: dto.title,
-        body: dto.body,
-        priority: dto.priority,
-        senderId: dto.senderId,
-        broadcast: false, // assuming explicit users for now
-        // metadata/type not in schema but ignoring for now unless we alter schema
-      })
-      .returning();
+    const { notification, recipients } = await this.db.transaction(
+      async (tx) => {
+        // Persist notification
+        const [notification] = await tx
+          .insert(notifications)
+          .values({
+            title: dto.title,
+            body: dto.body,
+            priority: dto.priority,
+            senderId: dto.senderId,
+            broadcast,
+          })
+          .returning();
 
-    const [recipient] = await this.db
-      .insert(notificationRecipients)
-      .values({
-        notificationId: notification.id,
-        userId: dto.userId,
-        status: 'created',
-      })
-      .returning();
+        // Bulk insert all recipients
+        const recipients = await tx
+          .insert(notificationRecipients)
+          .values(
+            userIds.map((userId) => ({
+              notificationId: notification.id,
+              userId,
+              status: 'created' as const,
+            })),
+          )
+          .returning();
 
-    const response: NotificationResponseDto = {
-      id: notification.id,
-      title: notification.title,
-      body: notification.body,
-      priority: notification.priority as NotificationPriority,
-      type: null,
-      metadata: null,
-      read: false,
-      readAt: null,
-      acknowledged: false,
-      acknowledgedAt: null,
-      createdAt: notification.createdAt,
-      userId: recipient.userId,
+        return { notification, recipients };
+      },
+    );
+
+    // Emit one notification.created event per recipient
+    for (const recipient of recipients) {
+      const payload: NotificationResponseDto = {
+        id: notification.id,
+        title: notification.title,
+        body: notification.body,
+        priority: notification.priority as NotificationPriority,
+        type: null,
+        metadata: null,
+        read: false,
+        readAt: null,
+        acknowledged: false,
+        acknowledgedAt: null,
+        createdAt: notification.createdAt,
+        userId: recipient.userId,
+      };
+      this.gatewayClient.emit(NOTIFICATION_EVENTS.CREATED, payload);
+    }
+
+    return {
+      notificationId: notification.id,
+      recipientCount: recipients.length,
+      broadcast,
     };
-
-    // Emit notification.created event to GATEWAY_SERVICE (to be pushed via WebSockets)
-    this.gatewayClient.emit(NOTIFICATION_EVENTS.CREATED, response);
-
-    return response;
   }
 
   async findAll(userId: string, page = 1, limit = 20) {

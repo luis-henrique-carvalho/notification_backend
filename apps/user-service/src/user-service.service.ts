@@ -45,6 +45,7 @@ export class UserServiceService {
         name: dto.name,
         email: dto.email,
         password: hashedPassword,
+        role: 'admin',
       })
       .returning();
 
@@ -79,6 +80,24 @@ export class UserServiceService {
     const accessToken = this.signToken(user);
 
     return { accessToken, user: userResponse };
+  }
+
+  /**
+   * Returns all users with id, email, name, and role.
+   */
+  async findAll(): Promise<
+    { id: string; email: string; name: string; role: string }[]
+  > {
+    const result = await this.db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+      })
+      .from(users);
+
+    return result;
   }
 
   /**

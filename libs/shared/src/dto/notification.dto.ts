@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -47,11 +49,22 @@ export class CreateNotificationDto {
   priority?: NotificationPriority = NotificationPriority.MEDIUM;
 
   @ApiProperty({
-    description: 'The ID of the user the notification belongs to',
-    example: 'd83c4801-4470-4d8e-9c71-f9c18d022b72',
+    description: 'The IDs of the users the notification will be sent to',
+    example: ['d83c4801-4470-4d8e-9c71-f9c18d022b72'],
+    type: [String],
   })
-  @IsUUID()
-  userId: string;
+  @IsArray()
+  @IsUUID('4', { each: true })
+  @ArrayMinSize(1)
+  userIds: string[];
+
+  @ApiPropertyOptional({
+    description: 'Whether this is a broadcast notification sent to all users',
+    default: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  broadcast?: boolean = false;
 
   @ApiPropertyOptional({
     description:
@@ -162,6 +175,24 @@ export class UnreadCountDto {
 
   @ApiProperty({ description: 'The ID of the user' })
   userId: string;
+}
+
+/**
+ * Response DTO for a send notification operation.
+ */
+export class SendNotificationResponseDto {
+  @ApiProperty({
+    description: 'The unique identifier of the created notification template',
+  })
+  notificationId: string;
+
+  @ApiProperty({
+    description: 'The number of recipients the notification was sent to',
+  })
+  recipientCount: number;
+
+  @ApiProperty({ description: 'Whether this was a broadcast notification' })
+  broadcast: boolean;
 }
 
 export type NotificationCreatedEventPayload = NotificationResponseDto & {

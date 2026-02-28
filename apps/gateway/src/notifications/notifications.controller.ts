@@ -11,15 +11,21 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { NOTIFICATION_PATTERNS, CreateNotificationDto } from '@app/shared';
+import {
+  NOTIFICATION_PATTERNS,
+  SendNotificationResponseDto,
+} from '@app/shared';
 import { Role, Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { User } from 'apps/user-service/src/database/schema';
+import { firstValueFrom } from 'rxjs';
+import { SendNotificationDto } from './send-notification.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -32,20 +38,40 @@ export class NotificationsController {
 
   @Post()
   @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Create a new notification (Admin only)' })
+  @ApiOperation({
+    summary: 'Send a notification (Admin only)',
+    description:
+      'Sends a notification to specific users or, when `broadcast` is true, to all registered users.',
+  })
+  @ApiBody({ type: SendNotificationDto })
   @ApiResponse({
     status: 201,
     description: 'Notification successfully created.',
+    type: SendNotificationResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request. Validation failed.',
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden. Admin role required.',
   })
-  create(@Body() dto: CreateNotificationDto, @CurrentUser() user: User) {
-    return this.notificationClient.send(NOTIFICATION_PATTERNS.CREATE, {
-      ...dto,
-      senderId: user.id,
-    });
+  async create(
+    @Body() dto: SendNotificationDto,
+    @CurrentUser() user: User,
+  ): Promise<SendNotificationResponseDto> {
+    const userIds = dto.userIds ?? [];
+
+    return firstValueFrom(
+      this.notificationClient.send(NOTIFICATION_PATTERNS.CREATE, {
+        title: dto.title,
+        body: dto.body,
+        priority: dto.priority,
+        userIds,
+        senderId: user.id,
+      }),
+    );
   }
 
   @Get()

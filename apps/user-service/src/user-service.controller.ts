@@ -40,4 +40,15 @@ export class UserServiceController {
   async findById(@Payload() id: string): Promise<UserResponseDto> {
     return await this.userService.findById(id);
   }
+
+  /**
+   * Handles user.findAll messages from the Gateway.
+   * Returns all users with id, email, name, and role.
+   */
+  @MessagePattern(USER_PATTERNS.FIND_ALL)
+  async findAll(): Promise<
+    { id: string; email: string; name: string; role: string }[]
+  > {
+    return await this.userService.findAll();
+  }
 }
