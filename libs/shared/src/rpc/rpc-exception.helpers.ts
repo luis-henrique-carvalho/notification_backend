@@ -23,26 +23,38 @@ export interface RpcErrorPayload {
  * Throws an RpcException with NOT_FOUND code (→ HTTP 404).
  */
 export function rpcNotFound(message: string): never {
-  throw new RpcException({ code: RpcErrorCode.NOT_FOUND, message });
+  throw new RpcException({
+    code: RpcErrorCode.NOT_FOUND,
+    message,
+  });
 }
 
 /**
  * Throws an RpcException with BAD_REQUEST code (→ HTTP 400).
  */
 export function rpcBadRequest(message: string): never {
-  throw new RpcException({ code: RpcErrorCode.BAD_REQUEST, message });
+  throw new RpcException({
+    code: RpcErrorCode.BAD_REQUEST,
+    message,
+  });
 }
 
 /**
  * Throws an RpcException with UNAUTHORIZED code (→ HTTP 401).
  */
 export function rpcUnauthorized(message: string): never {
-  throw new RpcException({ code: RpcErrorCode.UNAUTHORIZED, message });
+  throw new RpcException({
+    code: RpcErrorCode.UNAUTHORIZED,
+    message,
+  });
 }
 
 /**
  * Throws an RpcException with CONFLICT code (→ HTTP 409).
  */
 export function rpcConflict(message: string): never {
-  throw new RpcException({ code: RpcErrorCode.CONFLICT, message });
+  throw new RpcException({
+    code: RpcErrorCode.CONFLICT,
+    message,
+  });
 }

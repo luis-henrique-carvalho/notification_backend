@@ -34,7 +34,7 @@ export class UserServiceService {
       .limit(1);
 
     if (existing) {
-      throw rpcConflict(`Email "${dto.email}" is already registered`);
+      rpcConflict(`Email "${dto.email}" is already registered`);
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -66,13 +66,13 @@ export class UserServiceService {
       .limit(1);
 
     if (!user) {
-      throw rpcUnauthorized('Invalid credentials');
+      rpcUnauthorized('Invalid credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
-      throw rpcUnauthorized('Invalid credentials');
+      rpcUnauthorized('Invalid credentials');
     }
 
     const userResponse = this.toUserResponse(user);
@@ -95,7 +95,7 @@ export class UserServiceService {
     console.log('user', user);
 
     if (!user) {
-      throw rpcNotFound(`User with id "${id}" not found`);
+      rpcNotFound(`User with id "${id}" not found`);
     }
 
     return this.toUserResponse(user);

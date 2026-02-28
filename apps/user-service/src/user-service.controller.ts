@@ -18,9 +18,9 @@ export class UserServiceController {
    * Creates a new user and returns a JWT + user data.
    */
   @MessagePattern(USER_PATTERNS.REGISTER)
-  register(@Payload() dto: RegisterDto): Promise<LoginResponseDto> {
+  async register(@Payload() dto: RegisterDto): Promise<LoginResponseDto> {
     console.log('register', dto);
-    return this.userService.register(dto);
+    return await this.userService.register(dto);
   }
 
   /**
@@ -28,8 +28,8 @@ export class UserServiceController {
    * Validates credentials and returns a JWT + user data.
    */
   @MessagePattern(USER_PATTERNS.LOGIN)
-  login(@Payload() dto: LoginDto): Promise<LoginResponseDto> {
-    return this.userService.login(dto);
+  async login(@Payload() dto: LoginDto): Promise<LoginResponseDto> {
+    return await this.userService.login(dto);
   }
 
   /**
@@ -37,7 +37,7 @@ export class UserServiceController {
    * Returns user data (without password) by ID.
    */
   @MessagePattern(USER_PATTERNS.FIND_BY_ID)
-  findById(@Payload() id: string): Promise<UserResponseDto> {
-    return this.userService.findById(id);
+  async findById(@Payload() id: string): Promise<UserResponseDto> {
+    return await this.userService.findById(id);
   }
 }

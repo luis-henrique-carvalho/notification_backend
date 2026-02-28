@@ -10,6 +10,7 @@ import {
   AcknowledgeDto,
   NOTIFICATION_EVENTS,
   rpcNotFound,
+  NotificationPriority,
 } from '@app/shared';
 
 @Injectable()
@@ -50,7 +51,7 @@ export class NotificationServiceService {
       id: notification.id,
       title: notification.title,
       body: notification.body,
-      priority: notification.priority as any,
+      priority: notification.priority as NotificationPriority,
       type: null,
       metadata: null,
       read: false,
@@ -97,7 +98,7 @@ export class NotificationServiceService {
         id: notification.id,
         title: notification.title,
         body: notification.body,
-        priority: notification.priority as any,
+        priority: notification.priority as NotificationPriority,
         type: null,
         metadata: null,
         read:
@@ -175,7 +176,7 @@ export class NotificationServiceService {
       .returning();
 
     if (!result.length) {
-      throw rpcNotFound('Notification not found or already acknowledged');
+      rpcNotFound('Notification not found or already acknowledged');
     }
 
     return { success: true };
