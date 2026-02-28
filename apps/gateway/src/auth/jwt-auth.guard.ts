@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
+import { UserResponseDto } from '@app/shared';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
 @Injectable()
@@ -24,11 +25,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
-    // You can throw an exception based on either "info" or "err" arguments
+  handleRequest<TUser = UserResponseDto>(err: unknown, user: unknown): TUser {
     if (err || !user) {
-      throw err || new UnauthorizedException();
+      throw new UnauthorizedException();
     }
-    return user;
+
+    return user as TUser;
   }
 }

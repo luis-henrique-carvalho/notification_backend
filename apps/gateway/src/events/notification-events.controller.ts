@@ -1,5 +1,9 @@
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import {
+  NotificationCreatedEventPayload,
+  NotificationStateEventPayload,
+} from '@app/shared';
 import { NotificationsGateway } from '../ws/notifications.gateway';
 
 @Controller()
@@ -9,7 +13,9 @@ export class NotificationEventsController {
   constructor(private readonly notificationsGateway: NotificationsGateway) {}
 
   @EventPattern('notification.created')
-  handleNotificationCreated(@Payload() payload: any) {
+  handleNotificationCreated(
+    @Payload() payload: NotificationCreatedEventPayload,
+  ) {
     this.logger.log(
       `Received notification.created event for user ${payload.userId}`,
     );
@@ -27,7 +33,9 @@ export class NotificationEventsController {
   }
 
   @EventPattern('notification.marked_read')
-  handleNotificationMarkedRead(@Payload() payload: any) {
+  handleNotificationMarkedRead(
+    @Payload() payload: NotificationStateEventPayload,
+  ) {
     this.logger.log(
       `Received notification.marked_read event for user ${payload.userId}`,
     );

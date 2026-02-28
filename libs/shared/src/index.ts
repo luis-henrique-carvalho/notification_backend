@@ -16,6 +16,8 @@ export {
   AcknowledgeDto,
   UnreadCountDto,
   NotificationPriority,
+  NotificationCreatedEventPayload,
+  NotificationStateEventPayload,
 } from './dto/notification.dto';
 
 // RPC utilities

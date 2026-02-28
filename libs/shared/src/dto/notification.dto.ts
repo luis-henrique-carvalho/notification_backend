@@ -163,3 +163,12 @@ export class UnreadCountDto {
   @ApiProperty({ description: 'The ID of the user' })
   userId: string;
 }
+
+export type NotificationCreatedEventPayload = NotificationResponseDto & {
+  unreadCount?: number;
+};
+
+export interface NotificationStateEventPayload {
+  userId: string;
+  unreadCount?: number;
+}
