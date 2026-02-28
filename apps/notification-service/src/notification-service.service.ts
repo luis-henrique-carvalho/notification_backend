@@ -29,6 +29,7 @@ export class NotificationServiceService {
             title: dto.title,
             body: dto.body,
             priority: dto.priority,
+            senderId: dto.senderId,
             broadcast: false, // assuming explicit users for now
             // metadata/type not in schema but ignoring for now unless we alter schema
         }).returning();

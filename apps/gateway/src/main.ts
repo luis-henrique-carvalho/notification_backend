@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -18,6 +18,11 @@ async function bootstrap() {
     // Create a hybrid app: HTTP server + RMQ microservice listener
     const app = await NestFactory.create(GatewayModule);
 
+    app.useGlobalPipes(new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+    }));
     app.useGlobalInterceptors(new RpcToHttpInterceptor());
 
     // Connect Gateway as a consumer of gateway_queue so it can receive

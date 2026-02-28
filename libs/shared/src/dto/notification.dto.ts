@@ -36,9 +36,20 @@ export class CreateNotificationDto {
     @IsOptional()
     priority?: NotificationPriority = NotificationPriority.MEDIUM;
 
-    @ApiProperty({ description: 'The ID of the user the notification belongs to' })
+    @ApiProperty({
+        description: 'The ID of the user the notification belongs to',
+        example: 'd83c4801-4470-4d8e-9c71-f9c18d022b72'
+    })
     @IsUUID()
     userId: string;
+
+    @ApiPropertyOptional({
+        description: 'The ID of the user who sent the notification (system if null)',
+        example: 'd83c4801-4470-4d8e-9c71-f9c18d022b72'
+    })
+    @IsUUID()
+    @IsOptional()
+    senderId?: string;
 
     @ApiPropertyOptional({ description: 'Optional type categorization for the notification' })
     @IsString()

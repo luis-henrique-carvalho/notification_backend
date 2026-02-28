@@ -1,8 +1,9 @@
 import 'dotenv/config';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { NotificationServiceModule } from './notification-service.module';
+import { AllRpcExceptionsFilter } from '@app/shared';
 
 async function bootstrap() {
     process.title = 'notification-service';
@@ -25,6 +26,13 @@ async function bootstrap() {
             },
         },
     );
+
+    app.useGlobalPipes(new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+    }));
+    app.useGlobalFilters(new AllRpcExceptionsFilter());
 
     app.enableShutdownHooks();
 

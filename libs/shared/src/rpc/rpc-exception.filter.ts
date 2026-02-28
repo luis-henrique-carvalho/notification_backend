@@ -1,4 +1,4 @@
-import { Catch, ArgumentsHost, Logger } from '@nestjs/common';
+import { Catch, ArgumentsHost, Logger, HttpException } from '@nestjs/common';
 import { BaseRpcExceptionFilter, RpcException } from '@nestjs/microservices';
 import { Observable, throwError } from 'rxjs';
 import { RpcErrorCode, RpcErrorPayload } from './rpc-exception.helpers';
@@ -45,6 +45,17 @@ export class AllRpcExceptionsFilter extends BaseRpcExceptionFilter {
             if (typeof error === 'string') {
                 return { code: RpcErrorCode.INTERNAL, message: error };
             }
+        }
+
+        // NestJS HttpExceptions (e.g. from ValidationPipe)
+        if (exception instanceof HttpException) {
+            const response = exception.getResponse();
+            const message = typeof response === 'object' && response !== null && 'message' in response
+                ? (Array.isArray(response['message']) ? response['message'].join(', ') : response['message'] as string)
+                : exception.message;
+
+            const code = exception.getStatus() === 400 ? RpcErrorCode.BAD_REQUEST : RpcErrorCode.INTERNAL;
+            return { code, message };
         }
 
         // Unexpected exception
