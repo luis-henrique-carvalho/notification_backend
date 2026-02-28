@@ -14,42 +14,42 @@ export const NOTIFICATION_CLIENT = 'NOTIFICATION_CLIENT';
 const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
 
 @Module({
-    imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        AuthModule,
-        UsersModule,
-        NotificationsModule,
-        WsModule,
-        ClientsModule.register([
-            {
-                name: USER_CLIENT,
-                transport: Transport.RMQ,
-                options: {
-                    urls: [rmqUrl],
-                    queue: 'user_queue',
-                    queueOptions: {
-                        durable: true,
-                    },
-                },
-            },
-            {
-                name: NOTIFICATION_CLIENT,
-                transport: Transport.RMQ,
-                options: {
-                    urls: [rmqUrl],
-                    queue: 'notification_queue',
-                    queueOptions: {
-                        durable: true,
-                    },
-                },
-            },
-        ]),
-    ],
-    providers: [
-        {
-            provide: APP_GUARD,
-            useClass: JwtAuthGuard,
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    UsersModule,
+    NotificationsModule,
+    WsModule,
+    ClientsModule.register([
+      {
+        name: USER_CLIENT,
+        transport: Transport.RMQ,
+        options: {
+          urls: [rmqUrl],
+          queue: 'user_queue',
+          queueOptions: {
+            durable: true,
+          },
         },
-    ],
+      },
+      {
+        name: NOTIFICATION_CLIENT,
+        transport: Transport.RMQ,
+        options: {
+          urls: [rmqUrl],
+          queue: 'notification_queue',
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
+    ]),
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class GatewayModule {}

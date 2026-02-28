@@ -6,8 +6,8 @@ import { NotificationEventsController } from '../events/notification-events.cont
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-    imports: [AuthModule, ConfigModule],
-    controllers: [NotificationEventsController],
-    providers: [NotificationsGateway, WsJwtGuard],
+  imports: [AuthModule, ConfigModule],
+  controllers: [NotificationEventsController],
+  providers: [NotificationsGateway, WsJwtGuard],
 })
 export class WsModule {}

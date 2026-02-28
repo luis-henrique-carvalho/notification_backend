@@ -8,14 +8,14 @@ export const DRIZZLE = Symbol('DRIZZLE');
 export type DrizzleDB = NodePgDatabase<typeof schema>;
 
 export const DrizzleProvider: Provider = {
-    provide: DRIZZLE,
-    useFactory: async () => {
-        const pool = new Pool({
-            connectionString:
-                process.env.DATABASE_URL ??
-                'postgresql://notification:notification@localhost:5432/notification',
-        });
+  provide: DRIZZLE,
+  useFactory: async () => {
+    const pool = new Pool({
+      connectionString:
+        process.env.DATABASE_URL ??
+        'postgresql://notification:notification@localhost:5432/notification',
+    });
 
-        return drizzle(pool, { schema });
-    },
+    return drizzle(pool, { schema });
+  },
 };

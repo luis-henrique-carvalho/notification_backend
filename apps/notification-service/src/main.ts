@@ -6,43 +6,43 @@ import { NotificationServiceModule } from './notification-service.module';
 import { AllRpcExceptionsFilter } from '@app/shared';
 
 async function bootstrap() {
-    process.title = 'notification-service';
+  process.title = 'notification-service';
 
-    const logger = new Logger('NotificationServiceBootstrap');
+  const logger = new Logger('NotificationServiceBootstrap');
 
-    const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
-    const queue = 'notification_queue';
+  const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
+  const queue = 'notification_queue';
 
-    const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-        NotificationServiceModule,
-        {
-            transport: Transport.RMQ,
-            options: {
-                urls: [rmqUrl],
-                queue,
-                queueOptions: {
-                    durable: true,
-                },
-            },
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    NotificationServiceModule,
+    {
+      transport: Transport.RMQ,
+      options: {
+        urls: [rmqUrl],
+        queue,
+        queueOptions: {
+          durable: true,
         },
-    );
+      },
+    },
+  );
 
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true,
-            forbidNonWhitelisted: true,
-            transform: true,
-        }),
-    );
-    app.useGlobalFilters(new AllRpcExceptionsFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+  app.useGlobalFilters(new AllRpcExceptionsFilter());
 
-    app.enableShutdownHooks();
+  app.enableShutdownHooks();
 
-    await app.listen();
+  await app.listen();
 
-    logger.log(
-        `Notification Service RMQ listening on queue "${queue}" via ${rmqUrl}`,
-    );
+  logger.log(
+    `Notification Service RMQ listening on queue "${queue}" via ${rmqUrl}`,
+  );
 }
 
 bootstrap();

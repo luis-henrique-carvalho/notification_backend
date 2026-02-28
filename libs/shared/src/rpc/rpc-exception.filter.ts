@@ -16,62 +16,60 @@ import { RpcErrorCode, RpcErrorPayload } from './rpc-exception.helpers';
  */
 @Catch()
 export class AllRpcExceptionsFilter extends BaseRpcExceptionFilter {
-    private readonly logger = new Logger(AllRpcExceptionsFilter.name);
+  private readonly logger = new Logger(AllRpcExceptionsFilter.name);
 
-    catch(exception: unknown, host: ArgumentsHost): Observable<never> {
-        const errorPayload = this.normalizeException(exception);
-        this.logger.error(
-            `RPC Exception: [${errorPayload.code}] ${errorPayload.message} - host ${host}`,
-            exception instanceof Error ? exception.stack : undefined,
-        );
-        return throwError(() => errorPayload);
+  catch(exception: unknown, host: ArgumentsHost): Observable<never> {
+    const errorPayload = this.normalizeException(exception);
+    this.logger.error(
+      `RPC Exception: [${errorPayload.code}] ${errorPayload.message} - host ${host}`,
+      exception instanceof Error ? exception.stack : undefined,
+    );
+    return throwError(() => errorPayload);
+  }
+
+  private normalizeException(exception: unknown): RpcErrorPayload {
+    if (exception instanceof RpcException) {
+      const error = exception.getError();
+
+      // Structured payload: { code, message }
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        'message' in error
+      ) {
+        return error as RpcErrorPayload;
+      }
+
+      // String payload
+      if (typeof error === 'string') {
+        return { code: RpcErrorCode.INTERNAL, message: error };
+      }
     }
 
-    private normalizeException(exception: unknown): RpcErrorPayload {
-        if (exception instanceof RpcException) {
-            const error = exception.getError();
+    // NestJS HttpExceptions (e.g. from ValidationPipe)
+    if (exception instanceof HttpException) {
+      const response = exception.getResponse();
+      const message =
+        typeof response === 'object' &&
+        response !== null &&
+        'message' in response
+          ? Array.isArray(response['message'])
+            ? response['message'].join(', ')
+            : (response['message'] as string)
+          : exception.message;
 
-            // Structured payload: { code, message }
-            if (
-                typeof error === 'object' &&
-                error !== null &&
-                'code' in error &&
-                'message' in error
-            ) {
-                return error as RpcErrorPayload;
-            }
-
-            // String payload
-            if (typeof error === 'string') {
-                return { code: RpcErrorCode.INTERNAL, message: error };
-            }
-        }
-
-        // NestJS HttpExceptions (e.g. from ValidationPipe)
-        if (exception instanceof HttpException) {
-            const response = exception.getResponse();
-            const message =
-                typeof response === 'object' &&
-                response !== null &&
-                'message' in response
-                    ? Array.isArray(response['message'])
-                        ? response['message'].join(', ')
-                        : (response['message'] as string)
-                    : exception.message;
-
-            const code =
-                exception.getStatus() === 400
-                    ? RpcErrorCode.BAD_REQUEST
-                    : RpcErrorCode.INTERNAL;
-            return { code, message };
-        }
-
-        // Unexpected exception
-        const message =
-            exception instanceof Error
-                ? exception.message
-                : 'Internal server error';
-
-        return { code: RpcErrorCode.INTERNAL, message };
+      const code =
+        exception.getStatus() === 400
+          ? RpcErrorCode.BAD_REQUEST
+          : RpcErrorCode.INTERNAL;
+      return { code, message };
     }
+
+    // Unexpected exception
+    const message =
+      exception instanceof Error ? exception.message : 'Internal server error';
+
+    return { code: RpcErrorCode.INTERNAL, message };
+  }
 }

@@ -6,17 +6,17 @@
  */
 
 export const USER_PATTERNS = {
-    REGISTER: 'user.register',
-    LOGIN: 'user.login',
-    FIND_BY_ID: 'user.findById',
-    FIND_ALL: 'user.findAll',
+  REGISTER: 'user.register',
+  LOGIN: 'user.login',
+  FIND_BY_ID: 'user.findById',
+  FIND_ALL: 'user.findAll',
 } as const;
 
 export const NOTIFICATION_PATTERNS = {
-    CREATE: 'notification.create',
-    FIND_ALL: 'notification.findAll',
-    MARK_READ: 'notification.markRead',
-    MARK_ALL_READ: 'notification.markAllRead',
-    ACKNOWLEDGE: 'notification.acknowledge',
-    UNREAD_COUNT: 'notification.unreadCount',
+  CREATE: 'notification.create',
+  FIND_ALL: 'notification.findAll',
+  MARK_READ: 'notification.markRead',
+  MARK_ALL_READ: 'notification.markAllRead',
+  ACKNOWLEDGE: 'notification.acknowledge',
+  UNREAD_COUNT: 'notification.unreadCount',
 } as const;

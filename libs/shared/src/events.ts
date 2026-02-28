@@ -6,6 +6,6 @@
  */
 
 export const NOTIFICATION_EVENTS = {
-    CREATED: 'notification.created',
-    DELIVERED: 'notification.delivered',
+  CREATED: 'notification.created',
+  DELIVERED: 'notification.delivered',
 } as const;

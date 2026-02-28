@@ -6,41 +6,41 @@ import { UserServiceModule } from './user-service.module';
 import { AllRpcExceptionsFilter } from '@app/shared';
 
 async function bootstrap() {
-    process.title = 'user-service';
+  process.title = 'user-service';
 
-    const logger = new Logger('UserServiceBootstrap');
+  const logger = new Logger('UserServiceBootstrap');
 
-    const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
-    const queue = 'user_queue';
+  const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
+  const queue = 'user_queue';
 
-    const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-        UserServiceModule,
-        {
-            transport: Transport.RMQ,
-            options: {
-                urls: [rmqUrl],
-                queue,
-                queueOptions: {
-                    durable: true,
-                },
-            },
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    UserServiceModule,
+    {
+      transport: Transport.RMQ,
+      options: {
+        urls: [rmqUrl],
+        queue,
+        queueOptions: {
+          durable: true,
         },
-    );
+      },
+    },
+  );
 
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true,
-            forbidNonWhitelisted: true,
-            transform: true,
-        }),
-    );
-    app.useGlobalFilters(new AllRpcExceptionsFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+  app.useGlobalFilters(new AllRpcExceptionsFilter());
 
-    app.enableShutdownHooks();
+  app.enableShutdownHooks();
 
-    await app.listen();
+  await app.listen();
 
-    logger.log(`User Service RMQ listening on queue "${queue}" via ${rmqUrl}`);
+  logger.log(`User Service RMQ listening on queue "${queue}" via ${rmqUrl}`);
 }
 
 bootstrap();
