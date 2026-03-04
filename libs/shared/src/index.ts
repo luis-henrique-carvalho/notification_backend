@@ -19,6 +19,8 @@ export {
   NotificationPriority,
   NotificationCreatedEventPayload,
   NotificationStateEventPayload,
+  AdminNotificationSummaryDto,
+  AdminNotificationRecipientDto,
 } from './dto/notification.dto';
 
 // RPC utilities

@@ -201,3 +201,85 @@ export interface NotificationStateEventPayload {
   userId: string;
   unreadCount?: number;
 }
+
+/**
+ * Response DTO for admin notification history list.
+ * Aggregates per-notification delivery statistics.
+ */
+export class AdminNotificationSummaryDto {
+  @ApiProperty({ description: 'The unique identifier of the notification' })
+  notificationId: string;
+
+  @ApiProperty({ description: 'The title of the notification' })
+  title: string;
+
+  @ApiProperty({ description: 'The body content of the notification' })
+  body: string;
+
+  @ApiProperty({
+    enum: NotificationPriority,
+    description: 'Priority level of the notification',
+  })
+  priority: NotificationPriority;
+
+  @ApiProperty({ description: 'Whether this was a broadcast notification' })
+  broadcast: boolean;
+
+  @ApiProperty({
+    description:
+      'The ID of the sender, or null for system-generated notifications',
+    nullable: true,
+  })
+  senderId: string | null;
+
+  @ApiProperty({ description: 'Total number of recipients' })
+  recipientCount: number;
+
+  @ApiProperty({
+    description:
+      'Number of recipients who read or acknowledged the notification',
+  })
+  readCount: number;
+
+  @ApiProperty({
+    description: 'Number of recipients who have not read the notification',
+  })
+  unreadCount: number;
+
+  @ApiProperty({ description: 'Date when the notification was created' })
+  createdAt: Date;
+}
+
+/**
+ * Response DTO for a single recipient entry in the admin recipients drill-down.
+ */
+export class AdminNotificationRecipientDto {
+  @ApiProperty({ description: 'The ID of the recipient user' })
+  userId: string;
+
+  @ApiProperty({
+    description:
+      'Delivery status of the notification for this recipient (created, delivered, read, acknowledged)',
+  })
+  status: string;
+
+  @ApiProperty({
+    description: 'Date when the recipient read the notification, or null',
+    nullable: true,
+  })
+  readAt: Date | null;
+
+  @ApiProperty({
+    description:
+      'Date when the notification was delivered to the recipient, or null',
+    nullable: true,
+  })
+  deliveredAt: Date | null;
+
+  @ApiProperty({
+    description:
+      'Date when the recipient acknowledged the notification, or null',
+    nullable: true,
+  })
+  acknowledgedAt: Date | null;
+}

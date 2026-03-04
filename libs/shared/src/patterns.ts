@@ -19,4 +19,6 @@ export const NOTIFICATION_PATTERNS = {
   MARK_ALL_READ: 'notification.markAllRead',
   ACKNOWLEDGE: 'notification.acknowledge',
   UNREAD_COUNT: 'notification.unreadCount',
+  FIND_ALL_ADMIN: 'notification.findAllAdmin',
+  FIND_RECIPIENTS: 'notification.findRecipients',
 } as const;
