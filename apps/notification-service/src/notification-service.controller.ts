@@ -4,7 +4,6 @@ import { NotificationServiceService } from './notification-service.service';
 import {
   NOTIFICATION_PATTERNS,
   CreateNotificationDto,
-  MarkReadDto,
   AcknowledgeDto,
 } from '@app/shared';
 
@@ -25,8 +24,8 @@ export class NotificationServiceController {
   }
 
   @MessagePattern(NOTIFICATION_PATTERNS.MARK_READ)
-  markRead(@Payload() data: { dto: MarkReadDto; userId: string }) {
-    return this.notificationService.markRead(data.dto, data.userId);
+  markRead(@Payload() data: { notification_id: string; userId: string }) {
+    return this.notificationService.markRead(data.notification_id, data.userId);
   }
 
   @MessagePattern(NOTIFICATION_PATTERNS.MARK_ALL_READ)

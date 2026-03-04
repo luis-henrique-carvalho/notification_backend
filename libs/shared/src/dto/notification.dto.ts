@@ -149,12 +149,10 @@ export class NotificationResponseDto {
  */
 export class MarkReadDto {
   @ApiProperty({
-    description: 'Array of notification IDs to mark as read',
-    type: [String],
+    description: 'The ID of the notification to mark as read',
   })
-  @IsArray()
-  @IsUUID('4', { each: true })
-  notificationIds: string[];
+  @IsUUID()
+  notificationId: string;
 }
 
 /**

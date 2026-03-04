@@ -7,7 +7,6 @@ import {
   CreateNotificationDto,
   NotificationResponseDto,
   SendNotificationResponseDto,
-  MarkReadDto,
   AcknowledgeDto,
   NOTIFICATION_EVENTS,
   rpcNotFound,
@@ -141,19 +140,29 @@ export class NotificationServiceService {
     };
   }
 
-  async markRead(dto: MarkReadDto, userId: string) {
+  async markRead(notificationId: string, userId: string) {
     this.logger.log(`Marking notifications read for user ${userId}`);
+    this.logger.debug(
+      `Marking notification ${notificationId} as read for user ${userId}`,
+    );
 
-    await this.db
+    const result = await this.db
       .update(notificationRecipients)
       .set({ status: 'read', readAt: new Date() })
       .where(
         and(
           eq(notificationRecipients.userId, userId),
-          inArray(notificationRecipients.notificationId, dto.notificationIds),
-          inArray(notificationRecipients.status, ['delivered', 'created']),
+          eq(notificationRecipients.notificationId, notificationId),
+          inArray(notificationRecipients.status, ['created', 'delivered']),
         ),
-      );
+      )
+      .returning();
+
+    console.log('markRead result:', result);
+
+    if (!result.length) {
+      rpcNotFound('Notification not found or already read');
+    }
 
     return { success: true };
   }
