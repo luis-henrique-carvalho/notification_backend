@@ -19,7 +19,6 @@ export class UserServiceController {
    */
   @MessagePattern(USER_PATTERNS.REGISTER)
   async register(@Payload() dto: RegisterDto): Promise<LoginResponseDto> {
-    console.log('register', dto);
     return await this.userService.register(dto);
   }
 

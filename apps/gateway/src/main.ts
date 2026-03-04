@@ -13,7 +13,7 @@ async function bootstrap() {
 
   const rmqUrl = process.env.RABBITMQ_URL ?? 'amqp://localhost:5672';
   const gatewayQueue = 'gateway_queue';
-  const httpPort = parseInt(process.env.PORT ?? '3000', 10);
+  const httpPort = parseInt(process.env.GATEWAY_PORT ?? '3000', 10);
 
   // Create a hybrid app: HTTP server + RMQ microservice listener
   const app = await NestFactory.create(GatewayModule);
