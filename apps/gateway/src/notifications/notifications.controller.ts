@@ -20,6 +20,8 @@ import {
 import {
   NOTIFICATION_PATTERNS,
   SendNotificationResponseDto,
+  AdminNotificationSummaryDto,
+  AdminNotificationRecipientDto,
 } from '@app/shared';
 import { Role, Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -91,6 +93,70 @@ export class NotificationsController {
       userId: user.id,
       page,
       limit,
+    });
+  }
+
+  @Get('history')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get notification history (Admin only)',
+    description:
+      'Returns a paginated list of all notifications with summary information.',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 20)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification history returned successfully.',
+    type: [AdminNotificationSummaryDto],
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Admin role required.',
+  })
+  findHistory(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 20,
+  ) {
+    return this.notificationClient.send(NOTIFICATION_PATTERNS.FIND_ALL_ADMIN, {
+      page,
+      limit,
+    });
+  }
+
+  @Get(':id/recipients')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Get notification recipients (Admin only)',
+    description:
+      'Returns a list of recipients and their delivery status for a specific notification.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Recipients returned successfully.',
+    type: [AdminNotificationRecipientDto],
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Admin role required.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Notification not found.',
+  })
+  findRecipients(@Param('id') notificationId: string) {
+    return this.notificationClient.send(NOTIFICATION_PATTERNS.FIND_RECIPIENTS, {
+      notificationId,
     });
   }
 

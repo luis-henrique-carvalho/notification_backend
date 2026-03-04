@@ -1,6 +1,6 @@
 import { Controller, Inject, Logger } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { DRIZZLE, DrizzleDB } from './database/drizzle.provider';
 import { notificationRecipients } from './database/schema';
 import { NOTIFICATION_EVENTS } from '@app/shared';

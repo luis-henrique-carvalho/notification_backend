@@ -42,4 +42,16 @@ export class NotificationServiceController {
   unreadCount(@Payload() data: { userId: string }) {
     return this.notificationService.unreadCount(data.userId);
   }
+
+  @MessagePattern(NOTIFICATION_PATTERNS.FIND_ALL_ADMIN)
+  findAllAdmin(@Payload() data: { page?: number; limit?: number }) {
+    return this.notificationService.findAllNotifications(data.page, data.limit);
+  }
+
+  @MessagePattern(NOTIFICATION_PATTERNS.FIND_RECIPIENTS)
+  findRecipients(@Payload() data: { notificationId: string }) {
+    return this.notificationService.findNotificationRecipients(
+      data.notificationId,
+    );
+  }
 }

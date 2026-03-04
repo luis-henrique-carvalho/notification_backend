@@ -11,6 +11,8 @@ import {
   NOTIFICATION_EVENTS,
   rpcNotFound,
   NotificationPriority,
+  AdminNotificationSummaryDto,
+  AdminNotificationRecipientDto,
 } from '@app/shared';
 
 @Injectable()
@@ -221,5 +223,98 @@ export class NotificationServiceService {
         ),
       );
     return { count: Number(count), userId };
+  }
+
+  async findAllNotifications(page = 1, limit = 20) {
+    this.logger.log('Finding all notifications with recipient statistics');
+    const offset = (page - 1) * limit;
+
+    // Query notifications with aggregated recipient counts
+    const results = await this.db
+      .select({
+        id: notifications.id,
+        title: notifications.title,
+        body: notifications.body,
+        priority: notifications.priority,
+        broadcast: notifications.broadcast,
+        senderId: notifications.senderId,
+        createdAt: notifications.createdAt,
+        recipientCount: sql<number>`COUNT(*)`,
+        readCount: sql<number>`COUNT(*) FILTER (WHERE ${notificationRecipients.status} IN ('read', 'acknowledged'))`,
+      })
+      .from(notifications)
+      .leftJoin(
+        notificationRecipients,
+        eq(notificationRecipients.notificationId, notifications.id),
+      )
+      .groupBy(notifications.id)
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Fetch total count for pagination
+    const [{ count }] = await this.db
+      .select({ count: sql<number>`count(DISTINCT ${notifications.id})` })
+      .from(notifications);
+
+    const data: AdminNotificationSummaryDto[] = results.map((row) => ({
+      notificationId: row.id,
+      title: row.title,
+      body: row.body,
+      priority: row.priority as NotificationPriority,
+      broadcast: row.broadcast,
+      senderId: row.senderId,
+      recipientCount: Number(row.recipientCount),
+      readCount: Number(row.readCount),
+      unreadCount: Number(row.recipientCount) - Number(row.readCount),
+      createdAt: row.createdAt,
+    }));
+
+    return {
+      data,
+      meta: {
+        total: Number(count),
+        page,
+        limit,
+        totalPages: Math.ceil(Number(count) / limit),
+      },
+    };
+  }
+
+  async findNotificationRecipients(notificationId: string) {
+    this.logger.log(`Finding recipients for notification ${notificationId}`);
+
+    // Verify notification exists
+    const notification = await this.db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(eq(notifications.id, notificationId))
+      .limit(1);
+
+    if (!notification.length) {
+      rpcNotFound('Notification not found');
+    }
+
+    // Query recipients for the notification
+    const recipients = await this.db
+      .select({
+        userId: notificationRecipients.userId,
+        status: notificationRecipients.status,
+        readAt: notificationRecipients.readAt,
+        deliveredAt: notificationRecipients.deliveredAt,
+        acknowledgedAt: notificationRecipients.acknowledgedAt,
+      })
+      .from(notificationRecipients)
+      .where(eq(notificationRecipients.notificationId, notificationId));
+
+    return recipients.map(
+      (recipient): AdminNotificationRecipientDto => ({
+        userId: recipient.userId,
+        status: recipient.status,
+        readAt: recipient.readAt,
+        deliveredAt: recipient.deliveredAt,
+        acknowledgedAt: recipient.acknowledgedAt,
+      }),
+    );
   }
 }
