@@ -13,6 +13,18 @@ import { ConfigService } from '@nestjs/config';
 import { UseGuards, Logger } from '@nestjs/common';
 import { WsJwtGuard } from './ws-jwt.guard';
 
+interface JwtPayload {
+  sub: string | number;
+  id?: string | number;
+  iat?: number;
+  exp?: number;
+  [key: string]: unknown;
+}
+
+interface ClientData {
+  user: JwtPayload;
+}
+
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -42,18 +54,20 @@ export class NotificationsGateway
         'JWT_SECRET',
         'super-secret',
       );
-      const payload = await this.jwtService.verifyAsync(token, {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret,
       });
 
-      client.data.user = payload;
+      (client.data as ClientData).user = payload;
 
       const userId = payload.sub; // Or payload.id
-      client.join(`user:${userId}`);
+      await client.join(`user:${userId}`);
 
       this.logger.log(`Client connected: ${client.id} (User: ${userId})`);
-    } catch (error: any) {
-      this.logger.error(`Connection failed: ${client.id} - ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Connection failed: ${client.id} - ${errorMessage}`);
       client.disconnect(true);
     }
   }
@@ -65,24 +79,25 @@ export class NotificationsGateway
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('notification:delivered')
   handleNotificationDelivered(
-    @MessageBody() data: any,
+    @MessageBody() data: unknown,
     @ConnectedSocket() client: Socket,
   ) {
-    const userId = client.data.user.sub || client.data.user.id;
+    const clientData = client.data as ClientData;
+    const userId = clientData.user.sub || clientData.user.id;
     this.logger.log(`Notification delivered ack from user ${userId}:`, data);
   }
 
   private extractToken(client: Socket): string | null {
-    const auth = client.handshake.auth?.token;
-    if (auth) return auth;
+    const auth = client.handshake.auth?.token as string | undefined;
+    if (typeof auth === 'string') return auth;
     const header = client.handshake.headers.authorization;
-    if (header && header.startsWith('Bearer ')) {
+    if (typeof header === 'string' && header.startsWith('Bearer ')) {
       return header.substring(7);
     }
     return null;
   }
 
-  emitNotification(userId: string | number, payload: any) {
+  emitNotification(userId: string | number, payload: unknown) {
     this.server.to(`user:${userId}`).emit('notification:new', payload);
   }
 
