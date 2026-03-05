@@ -46,5 +46,7 @@ export class NotificationEventsController {
         payload.unreadCount,
       );
     }
+
+    this.notificationsGateway.emitAdminUpdate();
   }
 }

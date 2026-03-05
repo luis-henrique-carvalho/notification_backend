@@ -166,6 +166,12 @@ export class NotificationServiceService {
       rpcNotFound('Notification not found or already read');
     }
 
+    const unreadCount = await this.getUnreadCount(userId);
+    this.gatewayClient.emit(NOTIFICATION_EVENTS.MARKED_READ, {
+      userId,
+      unreadCount,
+    });
+
     return { success: true };
   }
 
@@ -181,6 +187,12 @@ export class NotificationServiceService {
           inArray(notificationRecipients.status, ['created', 'delivered']),
         ),
       );
+
+    const unreadCount = await this.getUnreadCount(userId);
+    this.gatewayClient.emit(NOTIFICATION_EVENTS.MARKED_READ, {
+      userId,
+      unreadCount,
+    });
 
     return { success: true };
   }
@@ -209,6 +221,12 @@ export class NotificationServiceService {
       rpcNotFound('Notification not found or already acknowledged');
     }
 
+    const unreadCount = await this.getUnreadCount(userId);
+    this.gatewayClient.emit(NOTIFICATION_EVENTS.MARKED_READ, {
+      userId,
+      unreadCount,
+    });
+
     return { success: true };
   }
 
@@ -223,6 +241,19 @@ export class NotificationServiceService {
         ),
       );
     return { count: Number(count), userId };
+  }
+
+  private async getUnreadCount(userId: string): Promise<number> {
+    const [{ count }] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(notificationRecipients)
+      .where(
+        and(
+          eq(notificationRecipients.userId, userId),
+          inArray(notificationRecipients.status, ['created', 'delivered']),
+        ),
+      );
+    return Number(count);
   }
 
   async findAllNotifications(page = 1, limit = 20) {

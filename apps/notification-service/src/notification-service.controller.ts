@@ -24,8 +24,8 @@ export class NotificationServiceController {
   }
 
   @MessagePattern(NOTIFICATION_PATTERNS.MARK_READ)
-  markRead(@Payload() data: { notification_id: string; userId: string }) {
-    return this.notificationService.markRead(data.notification_id, data.userId);
+  markRead(@Payload() data: { notificationId: string; userId: string }) {
+    return this.notificationService.markRead(data.notificationId, data.userId);
   }
 
   @MessagePattern(NOTIFICATION_PATTERNS.MARK_ALL_READ)

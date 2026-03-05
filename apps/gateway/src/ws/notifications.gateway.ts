@@ -16,6 +16,7 @@ import { WsJwtGuard } from './ws-jwt.guard';
 interface JwtPayload {
   sub: string | number;
   id?: string | number;
+  role?: string;
   iat?: number;
   exp?: number;
   [key: string]: unknown;
@@ -63,6 +64,11 @@ export class NotificationsGateway
       const userId = payload.sub; // Or payload.id
       await client.join(`user:${userId}`);
 
+      if (payload.role === 'ADMIN' || payload.role === 'admin') {
+        await client.join('room:admins');
+        this.logger.log(`Admin client joined room:admins (User: ${userId})`);
+      }
+
       this.logger.log(`Client connected: ${client.id} (User: ${userId})`);
     } catch (error: unknown) {
       const errorMessage =
@@ -105,5 +111,10 @@ export class NotificationsGateway
     this.server
       .to(`user:${userId}`)
       .emit('notification:unread_count', { count });
+  }
+
+  emitAdminUpdate() {
+    console.log('Emitting admin:history_update event to room:admins');
+    this.server.to('room:admins').emit('admin:history_update');
   }
 }

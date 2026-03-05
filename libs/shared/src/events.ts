@@ -8,4 +8,5 @@
 export const NOTIFICATION_EVENTS = {
   CREATED: 'notification.created',
   DELIVERED: 'notification.delivered',
+  MARKED_READ: 'notification.marked_read',
 } as const;
