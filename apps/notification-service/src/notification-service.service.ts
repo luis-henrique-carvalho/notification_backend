@@ -13,6 +13,7 @@ import {
   NotificationPriority,
   AdminNotificationSummaryDto,
   AdminNotificationRecipientDto,
+  RecipientUpdatedEventPayload,
 } from '@app/shared';
 
 @Injectable()
@@ -148,9 +149,10 @@ export class NotificationServiceService {
       `Marking notification ${notificationId} as read for user ${userId}`,
     );
 
+    const readAt = new Date();
     const result = await this.db
       .update(notificationRecipients)
-      .set({ status: 'read', readAt: new Date() })
+      .set({ status: 'read', readAt })
       .where(
         and(
           eq(notificationRecipients.userId, userId),
@@ -160,17 +162,35 @@ export class NotificationServiceService {
       )
       .returning();
 
-    console.log('markRead result:', result);
-
     if (!result.length) {
       rpcNotFound('Notification not found or already read');
     }
 
+    // Task 2.5 — enrich MARKED_READ with stats
+    const { readCount, recipientCount } =
+      await this.getNotificationStats(notificationId);
     const unreadCount = await this.getUnreadCount(userId);
+
     this.gatewayClient.emit(NOTIFICATION_EVENTS.MARKED_READ, {
       userId,
       unreadCount,
+      notificationId,
+      readCount,
+      recipientCount,
     });
+
+    // Task 2.6 — emit RECIPIENT_UPDATED for this recipient
+    const recipientUpdatedPayload: RecipientUpdatedEventPayload = {
+      notificationId,
+      userId,
+      status: 'read',
+      readAt,
+      acknowledgedAt: null,
+    };
+    this.gatewayClient.emit(
+      NOTIFICATION_EVENTS.RECIPIENT_UPDATED,
+      recipientUpdatedPayload,
+    );
 
     return { success: true };
   }
@@ -178,17 +198,52 @@ export class NotificationServiceService {
   async markAllRead(userId: string) {
     this.logger.log(`Marking all notifications read for user ${userId}`);
 
-    await this.db
+    const readAt = new Date();
+    // Task 2.7 — capture updated rows so we can emit per-recipient events
+    const updatedRows = await this.db
       .update(notificationRecipients)
-      .set({ status: 'read', readAt: new Date() })
+      .set({ status: 'read', readAt })
       .where(
         and(
           eq(notificationRecipients.userId, userId),
           inArray(notificationRecipients.status, ['created', 'delivered']),
         ),
+      )
+      .returning();
+
+    // Emit one RECIPIENT_UPDATED per updated record
+    for (const row of updatedRows) {
+      const recipientPayload: RecipientUpdatedEventPayload = {
+        notificationId: row.notificationId,
+        userId: row.userId,
+        status: 'read',
+        readAt,
+        acknowledgedAt: null,
+      };
+      this.gatewayClient.emit(
+        NOTIFICATION_EVENTS.RECIPIENT_UPDATED,
+        recipientPayload,
       );
+    }
+
+    // Emit MARKED_READ with per-notification stats for each distinct notification touched
+    const uniqueNotificationIds = [
+      ...new Set(updatedRows.map((r) => r.notificationId)),
+    ];
+    for (const notificationId of uniqueNotificationIds) {
+      const { readCount, recipientCount } =
+        await this.getNotificationStats(notificationId);
+      this.gatewayClient.emit(NOTIFICATION_EVENTS.MARKED_READ, {
+        userId,
+        unreadCount: 0,
+        notificationId,
+        readCount,
+        recipientCount,
+      });
+    }
 
     const unreadCount = await this.getUnreadCount(userId);
+    // Final catch-all MARKED_READ for the user's global unread count
     this.gatewayClient.emit(NOTIFICATION_EVENTS.MARKED_READ, {
       userId,
       unreadCount,
@@ -202,12 +257,13 @@ export class NotificationServiceService {
       `Acknowledging notification ${dto.notificationId} for user ${userId}`,
     );
 
+    const acknowledgedAt = new Date();
     const result = await this.db
       .update(notificationRecipients)
       .set({
         status: 'acknowledged',
-        acknowledgedAt: new Date(),
-        readAt: new Date(),
+        acknowledgedAt,
+        readAt: acknowledgedAt,
       })
       .where(
         and(
@@ -221,11 +277,32 @@ export class NotificationServiceService {
       rpcNotFound('Notification not found or already acknowledged');
     }
 
+    // Task 2.8 — enrich MARKED_READ with stats
+    const { readCount, recipientCount } = await this.getNotificationStats(
+      dto.notificationId,
+    );
     const unreadCount = await this.getUnreadCount(userId);
+
     this.gatewayClient.emit(NOTIFICATION_EVENTS.MARKED_READ, {
       userId,
       unreadCount,
+      notificationId: dto.notificationId,
+      readCount,
+      recipientCount,
     });
+
+    // Task 2.8 — emit RECIPIENT_UPDATED with status 'acknowledged'
+    const recipientPayload: RecipientUpdatedEventPayload = {
+      notificationId: dto.notificationId,
+      userId,
+      status: 'acknowledged',
+      readAt: acknowledgedAt,
+      acknowledgedAt,
+    };
+    this.gatewayClient.emit(
+      NOTIFICATION_EVENTS.RECIPIENT_UPDATED,
+      recipientPayload,
+    );
 
     return { success: true };
   }
@@ -241,6 +318,33 @@ export class NotificationServiceService {
         ),
       );
     return { count: Number(count), userId };
+  }
+
+  // Task 2.9 — helper to get per-notification read/recipient counts
+  private async getNotificationStats(
+    notificationId: string,
+  ): Promise<{ readCount: number; recipientCount: number }> {
+    const [readRow] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(notificationRecipients)
+      .where(
+        and(
+          eq(notificationRecipients.notificationId, notificationId),
+          inArray(notificationRecipients.status, ['read', 'acknowledged']),
+        ),
+      )
+      .execute();
+
+    const [totalRow] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(notificationRecipients)
+      .where(eq(notificationRecipients.notificationId, notificationId))
+      .execute();
+
+    return {
+      readCount: Number(readRow.count),
+      recipientCount: Number(totalRow.count),
+    };
   }
 
   private async getUnreadCount(userId: string): Promise<number> {

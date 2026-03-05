@@ -3,7 +3,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { RpcException } from '@nestjs/microservices';
 import { NotificationServiceService } from './notification-service.service';
 import { DRIZZLE } from './database/drizzle.provider';
-import { NotificationPriority } from '@app/shared';
+import { NotificationPriority, NOTIFICATION_EVENTS } from '@app/shared';
 
 // Type definitions for test data
 interface NotificationWithStats {
@@ -68,6 +68,9 @@ interface MockDbChain {
   limit: jest.Mock;
   offset: jest.Mock;
   execute: jest.Mock;
+  update: jest.Mock;
+  set: jest.Mock;
+  returning: jest.Mock;
 }
 
 describe('NotificationServiceService', () => {
@@ -88,6 +91,9 @@ describe('NotificationServiceService', () => {
       limit: jest.fn().mockReturnThis(),
       offset: jest.fn().mockReturnThis(),
       execute: jest.fn(),
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      returning: jest.fn(),
     };
 
     // Mock ClientProxy
@@ -389,6 +395,190 @@ describe('NotificationServiceService', () => {
       expect(result).toBeDefined();
       expect(result).toEqual([]);
       expect(result).toHaveLength(0);
+    });
+  });
+
+  // ── Task 2.1 ──────────────────────────────────────────────────────────────
+  describe('markRead — emits enriched MARKED_READ', () => {
+    it('should emit notification.marked_read with notificationId, readCount and recipientCount', async () => {
+      const notificationId = 'notification-1';
+      const userId = 'user-1';
+
+      // DB update returns the updated row
+      mockDb.where.mockReturnValueOnce({
+        returning: jest
+          .fn()
+          .mockResolvedValueOnce([
+            { notificationId, userId, status: 'read', readAt: new Date() },
+          ]),
+      });
+
+      // getNotificationStats: readCount query
+      mockDb.where.mockReturnValueOnce({
+        execute: jest.fn().mockResolvedValueOnce([{ count: 3 }]),
+      });
+
+      // getNotificationStats: recipientCount query
+      mockDb.where.mockReturnValueOnce({
+        execute: jest.fn().mockResolvedValueOnce([{ count: 5 }]),
+      });
+
+      // getUnreadCount query
+      mockDb.where.mockReturnValueOnce(Promise.resolve([{ count: 2 }]));
+
+      await service.markRead(notificationId, userId);
+
+      expect(mockGatewayClient.emit).toHaveBeenCalledWith(
+        NOTIFICATION_EVENTS.MARKED_READ,
+        expect.objectContaining({
+          notificationId,
+          readCount: expect.any(Number) as number,
+          recipientCount: expect.any(Number) as number,
+        }),
+      );
+    });
+  });
+
+  // ── Task 2.2 ──────────────────────────────────────────────────────────────
+  describe('markRead — emits RECIPIENT_UPDATED', () => {
+    it('should emit notification.recipient_updated with notificationId, userId, status "read" and non-null readAt', async () => {
+      const notificationId = 'notification-1';
+      const userId = 'user-1';
+      const readAt = new Date();
+
+      mockDb.where.mockReturnValueOnce({
+        returning: jest
+          .fn()
+          .mockResolvedValueOnce([
+            { notificationId, userId, status: 'read', readAt },
+          ]),
+      });
+
+      // getNotificationStats: readCount
+      mockDb.where.mockReturnValueOnce({
+        execute: jest.fn().mockResolvedValueOnce([{ count: 3 }]),
+      });
+      // getNotificationStats: recipientCount
+      mockDb.where.mockReturnValueOnce({
+        execute: jest.fn().mockResolvedValueOnce([{ count: 5 }]),
+      });
+      // getUnreadCount
+      mockDb.where.mockReturnValueOnce(Promise.resolve([{ count: 2 }]));
+
+      await service.markRead(notificationId, userId);
+
+      expect(mockGatewayClient.emit).toHaveBeenCalledWith(
+        NOTIFICATION_EVENTS.RECIPIENT_UPDATED,
+        expect.objectContaining({
+          notificationId,
+          userId,
+          status: 'read',
+          readAt: expect.any(Date) as Date,
+        }),
+      );
+    });
+  });
+
+  // ── Task 2.3 ──────────────────────────────────────────────────────────────
+  describe('markAllRead — emits one RECIPIENT_UPDATED per updated recipient', () => {
+    it('should emit recipient_updated once for each updated record', async () => {
+      const userId = 'user-1';
+      const updatedAt = new Date();
+
+      const updatedRows = [
+        { notificationId: 'n-1', userId, status: 'read', readAt: updatedAt },
+        { notificationId: 'n-2', userId, status: 'read', readAt: updatedAt },
+      ];
+
+      mockDb.where.mockReturnValueOnce({
+        returning: jest.fn().mockResolvedValueOnce(updatedRows),
+      });
+
+      // getNotificationStats for n-1 (readCount + recipientCount)
+      mockDb.where
+        .mockReturnValueOnce({
+          execute: jest.fn().mockResolvedValueOnce([{ count: 1 }]),
+        })
+        .mockReturnValueOnce({
+          execute: jest.fn().mockResolvedValueOnce([{ count: 2 }]),
+        });
+
+      // getNotificationStats for n-2 (readCount + recipientCount)
+      mockDb.where
+        .mockReturnValueOnce({
+          execute: jest.fn().mockResolvedValueOnce([{ count: 2 }]),
+        })
+        .mockReturnValueOnce({
+          execute: jest.fn().mockResolvedValueOnce([{ count: 3 }]),
+        });
+
+      // getUnreadCount
+      mockDb.where.mockReturnValueOnce(Promise.resolve([{ count: 0 }]));
+
+      await service.markAllRead(userId);
+
+      const recipientUpdatedCalls = (
+        mockGatewayClient.emit as jest.Mock
+      ).mock.calls.filter(
+        ([event]: [string, unknown]) =>
+          event === NOTIFICATION_EVENTS.RECIPIENT_UPDATED,
+      ) as [string, Record<string, unknown>][];
+
+      expect(recipientUpdatedCalls).toHaveLength(updatedRows.length);
+      expect(recipientUpdatedCalls[0][1]).toMatchObject({
+        notificationId: 'n-1',
+        userId,
+        status: 'read',
+      });
+      expect(recipientUpdatedCalls[1][1]).toMatchObject({
+        notificationId: 'n-2',
+        userId,
+        status: 'read',
+      });
+    });
+  });
+
+  // ── Task 2.4 ──────────────────────────────────────────────────────────────
+  describe('acknowledge — emits RECIPIENT_UPDATED with status "acknowledged"', () => {
+    it('should emit recipient_updated with status "acknowledged" and acknowledgedAt filled', async () => {
+      const notificationId = 'notification-1';
+      const userId = 'user-1';
+      const acknowledgedAt = new Date();
+
+      mockDb.where.mockReturnValueOnce({
+        returning: jest.fn().mockResolvedValueOnce([
+          {
+            notificationId,
+            userId,
+            status: 'acknowledged',
+            readAt: acknowledgedAt,
+            acknowledgedAt,
+          },
+        ]),
+      });
+
+      // getNotificationStats: readCount
+      mockDb.where.mockReturnValueOnce({
+        execute: jest.fn().mockResolvedValueOnce([{ count: 4 }]),
+      });
+      // getNotificationStats: recipientCount
+      mockDb.where.mockReturnValueOnce({
+        execute: jest.fn().mockResolvedValueOnce([{ count: 5 }]),
+      });
+      // getUnreadCount
+      mockDb.where.mockReturnValueOnce(Promise.resolve([{ count: 1 }]));
+
+      await service.acknowledge({ notificationId }, userId);
+
+      expect(mockGatewayClient.emit).toHaveBeenCalledWith(
+        NOTIFICATION_EVENTS.RECIPIENT_UPDATED,
+        expect.objectContaining({
+          notificationId,
+          userId,
+          status: 'acknowledged',
+          acknowledgedAt: expect.any(Date) as Date,
+        }),
+      );
     });
   });
 });

@@ -200,6 +200,21 @@ export type NotificationCreatedEventPayload = NotificationResponseDto & {
 export interface NotificationStateEventPayload {
   userId: string;
   unreadCount?: number;
+  notificationId: string;
+  readCount: number;
+  recipientCount: number;
+}
+
+/**
+ * Event payload emitted when a single notification recipient's status is updated.
+ * Emitted as NOTIFICATION_EVENTS.RECIPIENT_UPDATED.
+ */
+export interface RecipientUpdatedEventPayload {
+  notificationId: string;
+  userId: string;
+  status: string;
+  readAt: Date | null;
+  acknowledgedAt: Date | null;
 }
 
 /**

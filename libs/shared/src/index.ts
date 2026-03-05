@@ -19,6 +19,7 @@ export {
   NotificationPriority,
   NotificationCreatedEventPayload,
   NotificationStateEventPayload,
+  RecipientUpdatedEventPayload,
   AdminNotificationSummaryDto,
   AdminNotificationRecipientDto,
 } from './dto/notification.dto';
