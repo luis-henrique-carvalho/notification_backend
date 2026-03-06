@@ -45,7 +45,7 @@ export class UserServiceService {
         name: dto.name,
         email: dto.email,
         password: hashedPassword,
-        role: 'admin',
+        role: 'user',
       })
       .returning();
 
