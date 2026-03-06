@@ -34,8 +34,8 @@ export class NotificationServiceController {
   }
 
   @MessagePattern(NOTIFICATION_PATTERNS.ACKNOWLEDGE)
-  acknowledge(@Payload() data: { dto: AcknowledgeDto; userId: string }) {
-    return this.notificationService.acknowledge(data.dto, data.userId);
+  acknowledge(@Payload() data: AcknowledgeDto & { userId: string }) {
+    return this.notificationService.acknowledge(data, data.userId);
   }
 
   @MessagePattern(NOTIFICATION_PATTERNS.UNREAD_COUNT)
