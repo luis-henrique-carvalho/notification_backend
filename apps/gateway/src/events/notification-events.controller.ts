@@ -1,8 +1,10 @@
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import {
+  NOTIFICATION_EVENTS,
   NotificationCreatedEventPayload,
   NotificationStateEventPayload,
+  RecipientUpdatedEventPayload,
 } from '@app/shared';
 import { NotificationsGateway } from '../ws/notifications.gateway';
 
@@ -47,6 +49,19 @@ export class NotificationEventsController {
       );
     }
 
-    this.notificationsGateway.emitAdminUpdate();
+    this.notificationsGateway.emitAdminNotificationStatsUpdated(
+      payload.notificationId,
+      payload.readCount,
+      payload.unreadCount ?? 0,
+      payload.recipientCount,
+    );
+  }
+
+  @EventPattern(NOTIFICATION_EVENTS.RECIPIENT_UPDATED)
+  handleRecipientUpdated(@Payload() payload: RecipientUpdatedEventPayload) {
+    this.logger.log(
+      `Received notification.recipient_updated event for notification ${payload.notificationId} user ${payload.userId}`,
+    );
+    this.notificationsGateway.emitAdminRecipientUpdated(payload);
   }
 }

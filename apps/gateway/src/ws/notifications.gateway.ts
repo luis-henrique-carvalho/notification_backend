@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UseGuards, Logger } from '@nestjs/common';
 import { WsJwtGuard } from './ws-jwt.guard';
+import { RecipientUpdatedEventPayload } from '@app/shared';
 
 interface JwtPayload {
   sub: string | number;
@@ -113,8 +114,27 @@ export class NotificationsGateway
       .emit('notification:unread_count', { count });
   }
 
-  emitAdminUpdate() {
-    console.log('Emitting admin:history_update event to room:admins');
-    this.server.to('room:admins').emit('admin:history_update');
+  emitAdminNotificationStatsUpdated(
+    notificationId: string,
+    readCount: number,
+    unreadCount: number,
+    recipientCount: number,
+  ): void {
+    this.logger.log(
+      `Emitting admin:notification_stats_updated for notification ${notificationId}`,
+    );
+    this.server.to('room:admins').emit('admin:notification_stats_updated', {
+      notificationId,
+      readCount,
+      unreadCount,
+      recipientCount,
+    });
+  }
+
+  emitAdminRecipientUpdated(payload: RecipientUpdatedEventPayload): void {
+    this.logger.log(
+      `Emitting admin:recipient_updated for notification ${payload.notificationId} user ${payload.userId}`,
+    );
+    this.server.to('room:admins').emit('admin:recipient_updated', payload);
   }
 }
